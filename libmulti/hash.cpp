@@ -4,7 +4,7 @@ namespace multi {
 namespace hash {
 
 
-bytes sum(const Type& type = sha2_256, const bytes& input)
+bytes sum(const bytes& input, const Type& type)
 {
   bytes digest(type.len());
   digest.insert(digest.begin(), type.len());

@@ -1,4 +1,4 @@
-#include <core/common.hpp>
+#include <common/types.hpp>
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
 #include <cryptopp/keccak.h>
@@ -360,7 +360,7 @@ constexpr Type const Skein1024_1016(0xb3df, 0x7f);
 constexpr Type const Skein1024_1024(0xb3e0, 0x80);
 
 
-bytes sum(const bytes&, const Type&);
+bytes sum(const bytes& input, const Type& type = sha2_256);
 
 }  
 }

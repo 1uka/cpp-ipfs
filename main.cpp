@@ -1,5 +1,6 @@
-#include <core/common.hpp>
-#include <libmulti/common.hpp>
+#include <common/types.hpp>
+#include <libmulti/hash.hpp>
+#include <libmulti/base.hpp>
 #include <iostream>
 
 /* driver */
@@ -36,5 +37,8 @@ int main()
   dec = multi::base::decode(enc);
   std::cout << "Decoded back: "
             << std::string(dec.begin(), dec.end()) << std::endl; 
+  dec = multi::hash::sum(dec);
+  std::cout << "Hashed: "
+            << multi::base::encode(multi::base::Base58BTC, dec) << std::endl;
   return 0;
 }
