@@ -1,5 +1,6 @@
 #include <core/common.hpp>
 #include <libmulti/common.hpp>
+#include <iostream>
 
 /* driver */
 int main()

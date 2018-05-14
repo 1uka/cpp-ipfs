@@ -7,15 +7,14 @@ namespace base {
 template<>
 std::string Endec<Type::Base16>::encode(const bytes& input)
 {
-  std::string& alphabet = Endec<Type::Base16>::alphabet;
   size_t length = input.size();
   std::string output;
   output.reserve(2 * length);
 
   for(size_t i = 0; i < length; i++)
   {
-    output.push_back(alphabet[input[i] >> 4]);
-    output.push_back(alphabet[input[i] & 15]);
+    output.push_back(b16alphabet[input[i] >> 4]);
+    output.push_back(b16alphabet[input[i] & 15]);
   }
 
   return output;
@@ -24,7 +23,7 @@ std::string Endec<Type::Base16>::encode(const bytes& input)
 template<>
 bytes Endec<Type::Base16>::decode(std::string input)
 {
-  const char* alphabet = &Endec<Type::Base16>::alphabet[0];
+  const char* alphabet = b16alphabet;
   size_t length = input.size();
 
   if(length & 1) throw std::invalid_argument("odd length string");
@@ -48,7 +47,6 @@ bytes Endec<Type::Base16>::decode(std::string input)
 template<>
 std::string Endec<Type::Base32>::encode(const bytes& input)
 {
-  std::string& alphabet = Endec<Type::Base32>::alphabet;
   size_t length = input.size();
 
   uint32_t bits = 0;
@@ -62,12 +60,12 @@ std::string Endec<Type::Base32>::encode(const bytes& input)
 
     while(bits >= 5)
     {
-      output += alphabet[(value >> (bits - 5)) & 31];
+      output += b32alphabet[(value >> (bits - 5)) & 31];
       bits -= 5;
     }
   }
 
-  if(bits > 0) { output += alphabet[(value << (5 - bits)) & 31]; }
+  if(bits > 0) { output += b32alphabet[(value << (5 - bits)) & 31]; }
 
   return output;
 }
@@ -75,8 +73,6 @@ std::string Endec<Type::Base32>::encode(const bytes& input)
 template<>
 bytes Endec<Type::Base32>::decode(std::string input)
 {
-  std::string& alphabet = Endec<Type::Base32>::alphabet;
-
   std::replace(input.begin(), input.end(), '=', 'g');
 
   size_t lenght = input.length();
@@ -87,7 +83,7 @@ bytes Endec<Type::Base32>::decode(std::string input)
   bytes output((lenght * 5 / 8) | 0);
   for(size_t i = 0; i < lenght; i++)
   {
-    value = (value << 5) | alphabet.find(tolower(input[i]));
+    value = (value << 5) | std::string(b32alphabet).find(tolower(input[i]));
     bits += 5;
 
     if(bits >= 8)
@@ -143,7 +139,7 @@ std::string Endec<Type::Base58BTC>::encode(const bytes& input)
   str.reserve(zeroes + (b58.end() - it));
   str.assign(zeroes, '1');
   while (it != b58.end()) 
-    str += Endec<Type::Base58BTC>::alphabet[*(it++)]; 
+    str += b58alphabet[*(it++)]; 
 
   return str;
 }
@@ -201,7 +197,6 @@ bytes Endec<Type::Base58BTC>::decode(std::string input)
 template<>
 std::string Endec<Type::Base64>::encode(const bytes& input)
 {
-  std::string& alphabet = Endec<Type::Base64>::alphabet;
   std::string output;
   size_t i;
   unsigned char a3[3], a4[4];
@@ -216,7 +211,7 @@ std::string Endec<Type::Base64>::encode(const bytes& input)
       a4[2] = ((a3[1] & 0x0f) << 2) + ((a3[2] & 0xc0) >> 6);
       a4[3] = a3[2] & 0x3f;
 
-      for(size_t j = 0; j < 4; j++) { output += alphabet[a4[j]]; }
+      for(size_t j = 0; j < 4; j++) { output += b64alphabet[a4[j]]; }
     }
   }
 
@@ -229,7 +224,7 @@ std::string Endec<Type::Base64>::encode(const bytes& input)
     a4[1] = ((a3[0] & 0x03) << 4) + ((a3[1] & 0xf0) >> 4);
     a4[2] = ((a3[1] & 0x0f) << 2) + ((a3[2] & 0xc0) >> 6);
 
-    for(size_t j = 0; j < i + 1; j++) { output += alphabet[a4[j]]; }
+    for(size_t j = 0; j < i + 1; j++) { output += b64alphabet[a4[j]]; }
 
     while(i++ < 3) { output += '='; }
   }
@@ -241,6 +236,7 @@ template<>
 bytes Endec<Type::Base64>::decode(std::string input)
 {
   constexpr auto is_base64 = [](const unsigned char& c) -> bool { return (isalnum(c) || (c == '+') || (c == '/')); };
+  std::string alphabet(b64alphabet);
   bytes output;
   size_t length = input.length();
   size_t i, j;

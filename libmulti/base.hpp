@@ -3,7 +3,10 @@
 namespace multi {
 namespace base {
 
-enum class Type : char 
+
+// TODO: create custom exceptions
+
+enum Type : char
 {
 	Identity          = 0x00,
 	Base1             = '1',
@@ -52,24 +55,22 @@ struct Endec final
 {
   static std::string encode(const bytes&);
   static bytes       decode(std::string);
-
-  static std::string alphabet;
 };
 
 
-template<> std::string Endec<Type::Base16>::alphabet = "0123456789abcdef";
+constexpr char b16alphabet[] = "0123456789abcdef";
 template<> std::string Endec<Type::Base16>::encode(const bytes&);
 template<> bytes       Endec<Type::Base16>::decode(std::string);
 
-template<> std::string Endec<Type::Base32>::alphabet = "abcdefghijklmnopqrstuvwxyz234567";
+constexpr char b32alphabet[] = "abcdefghijklmnopqrstuvwxyz234567";
 template<> std::string Endec<Type::Base32>::encode(const bytes&);
 template<> bytes       Endec<Type::Base32>::decode(std::string);
 
-template<> std::string Endec<Type::Base58BTC>::alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+constexpr char b58alphabet[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 template<> std::string Endec<Type::Base58BTC>::encode(const bytes&);
 template<> bytes       Endec<Type::Base58BTC>::decode(std::string);
 
-template<> std::string Endec<Type::Base64>::alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+constexpr char b64alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 template<> std::string Endec<Type::Base64>::encode(const bytes&);
 template<> bytes       Endec<Type::Base64>::decode(std::string);
 
@@ -88,7 +89,7 @@ inline std::string encode(Type t, const bytes& input)
     case Type::Base64:
       return (char) Type::Base64 + Endec<Type::Base64>().encode(input);
     default:
-      return NULL;
+      throw new std::invalid_argument("unknown encoding");
   }
 }
 
@@ -106,7 +107,7 @@ inline bytes decode(std::string input)
     case (char) Type::Base64:
       return Endec<Type::Base64>().decode(input.substr(1, input.length() - 1));
     default:
-      return bytes(0);
+      throw new std::invalid_argument("invalid input string/bad encoding");
   }
 }
 
