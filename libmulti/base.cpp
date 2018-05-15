@@ -26,7 +26,7 @@ bytes Endec<Type::Base16>::decode(std::string input)
   const char* alphabet = b16alphabet;
   size_t length = input.size();
 
-  if(length & 1) throw std::invalid_argument("odd length string");
+  if(length & 1) throw new std::invalid_argument("odd length string");
 
   bytes output(length / 2);
   for(size_t i = 0; i < length; i += 2)
@@ -167,7 +167,7 @@ bytes Endec<Type::Base58BTC>::decode(std::string input)
   {
     // Decode base58 character
     int carry = mapBase58[(uint8_t)*psz];
-    if (carry == -1)  { return bytes(0); }
+    if (carry == -1)  { throw new std::invalid_argument("invalid b58 character"); }
     int i = 0;
     for (std::vector<unsigned char>::reverse_iterator it = b256.rbegin(); (carry != 0 || i < length) && (it != b256.rend()); ++it, ++i) 
     {
@@ -181,7 +181,7 @@ bytes Endec<Type::Base58BTC>::decode(std::string input)
   }
   // Skip trailing spaces.
   while (isspace(*psz)) { psz++; }
-  if (*psz != 0) { return bytes(0); }
+  if (*psz != 0) { throw new std::invalid_argument("invalid b58 character"); }
   // Skip leading zeroes in b256.
   std::vector<unsigned char>::iterator it = b256.begin() + (size - length);
   while (it != b256.end() && *it == 0) { it++; }

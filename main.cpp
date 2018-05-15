@@ -36,9 +36,23 @@ int main()
 
   dec = multi::base::decode(enc);
   std::cout << "Decoded back: "
-            << std::string(dec.begin(), dec.end()) << std::endl; 
-  dec = multi::hash::sum(dec);
+            << std::string(dec.begin(), dec.end()) << std::endl;
+  try
+  {
+    dec = multi::hash::sum(dec);
+  } catch(std::invalid_argument e)
+  {
+    std::cout << e.exception::what() << std::endl;
+    return -1;
+  }
+  
+  std::cout << "Multihash length: " << dec.size() << std::endl;
   std::cout << "Hashed: "
             << multi::base::encode(multi::base::Base58BTC, dec) << std::endl;
+
+  multi::hash::Decoded d = multi::hash::decode(dec);
+  std::cout << "Hash type: " << d.code() << std::endl;
+  std::cout << "Hash len: " << d.len() << std::endl;
+  std::cout << "Hash without prefix: " << multi::base::encode(multi::base::Base58BTC, bytes(d.hash(), d.hash() + d.len())) << std::endl;
   return 0;
 }
