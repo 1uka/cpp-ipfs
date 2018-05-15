@@ -39,7 +39,7 @@ int main()
 						<< std::string(dec.begin(), dec.end()) << std::endl;
 	try
 	{
-		dec = multi::hash::sum(dec);
+		dec = multi::hash::sum(dec, multi::hash::blake2s_256);
 	} catch(std::invalid_argument e)
 	{
 		std::cout << e.exception::what() << std::endl;
