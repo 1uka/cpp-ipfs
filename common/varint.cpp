@@ -12,7 +12,7 @@ int put_uvarint(bytes& buf, uint64_t x)
 	return i + 1;
 }
 
-uint64_t uvarint(const bytes& buf)
+uint64_t uvarint(const bytes& buf, int* len)
 {
 	uint64_t x = 0;
 	unsigned int s = 0;
@@ -21,13 +21,15 @@ uint64_t uvarint(const bytes& buf)
 		if(buf[i] < 0x80)
 		{
 			if(i > 9 || (i == 9 && buf[i] > 1)) { throw Exception("uvarint overflow"); }
-			return x | ((uint64_t) buf[i]) << s; 
+			if(len != NULL) { *len = i + 1; }
+			return x | ((uint64_t) buf[i]) << s;
 		}
 
 		x |= ((uint64_t) buf[i] & 0x7f) << s;
 		s += 7;
 	}
-	throw Exception("buffer too small");
+	if(len != NULL) { *len = 0; }
+	return 0;
 }
 
 
@@ -38,9 +40,9 @@ int put_varint(bytes& buf, int64_t x)
 	return put_uvarint(buf, ux);
 }
 
-int varint(const bytes& buf)
+int varint(const bytes& buf, int* len)
 {
-	uint64_t ux = uvarint(buf);
+	uint64_t ux = uvarint(buf, len);
 	int64_t x = (int64_t) ux >> 1;
 	if((ux & 1) != 0) { x = ~x; }
 	return x;

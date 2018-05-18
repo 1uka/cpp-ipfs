@@ -1,4 +1,18 @@
+/**
+ * @brief Buffers with varint prefixes defining the codec used
+ * 
+ * @file codec.hpp
+ * @author Luka Atanasovski
+ * @date 2018-05-19
+ */
+
+
+#ifndef MULTICODEC_H
+#define MULTICODEC_H
+
+
 #include <common/types.hpp>
+
 
 namespace multi {
 namespace codec {
@@ -191,3 +205,6 @@ inline void remove_prefix(bytes& buf) { } // TODO: remove uvarint prefix from bu
 
 }
 }
+
+
+#endif // !MULTICODEC_H

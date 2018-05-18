@@ -7,11 +7,17 @@
  */
 
 
+#ifndef MULTIHASH_H
+#define MULTIHASH_H
+
+
 #include <common/types.hpp>
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
 #include <cryptopp/keccak.h>
 #include <cryptopp/blake2.h>
+
+#include "base.hpp"
 
 
 namespace multi {
@@ -423,7 +429,10 @@ private:
  * @param input the multihash
  * @return Decoded `Decoded` object
  */
-inline Decoded decode(const bytes& input) { return Decoded(input); };
+inline Decoded decode(const bytes& input) { return Decoded(input); }
+inline Decoded from_string(const std::string& s) { return Decoded(multi::base::decode(s)); }
 
 }  
 }
+
+#endif // !MULTIHASH_H

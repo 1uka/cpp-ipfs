@@ -6,6 +6,10 @@
  * @date 2018-05-15
  */
 
+#ifndef MULTIBASE_H
+#define MULTIBASE_H
+
+
 #include <common/types.hpp>
 
 namespace multi {
@@ -122,3 +126,6 @@ inline bytes decode(std::string input)
 }
 }
 
+
+
+#endif // !MULTIBASE_H
