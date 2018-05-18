@@ -380,6 +380,8 @@ constexpr Type const blake2s_256(0xb260, 0x20);
 // constexpr Type const Skein1024_1024(0xb3e0, 0x80);
 
 
+
+
 /**
  * @brief Apply a hash function to some data
  * 
@@ -401,17 +403,17 @@ public:
 	Decoded() = default;
 	~Decoded() = default;
 
-	constexpr explicit Decoded(const byte* _hash, const Type& _type = sha2_256) : m_hash(_hash), m_type(_type) {};
+	explicit Decoded(const bytes& _hash) : m_hash(_hash.begin() + 2, _hash.end()), m_type(_hash[0], _hash[1]) {};
 
-	constexpr const byte* hash() const { return m_hash; };
+	constexpr const bytes& hash() const { return m_hash; };
 	constexpr const Type& type() const { return m_type; };
 	
 	constexpr const unsigned short code() const { return m_type.code(); };
 	constexpr const unsigned short len() const { return m_type.len(); };
 
 private:
-	const byte* m_hash;
-	const Type m_type;
+	bytes m_hash;
+	Type m_type;
 };
 
 
@@ -421,7 +423,7 @@ private:
  * @param input the multihash
  * @return Decoded `Decoded` object
  */
-constexpr Decoded decode(const bytes& input) { return Decoded(input.data() + 2, Type(input[0], input[1])); };
+inline Decoded decode(const bytes& input) { return Decoded(input); };
 
 }  
 }

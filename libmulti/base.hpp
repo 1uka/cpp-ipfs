@@ -12,39 +12,39 @@ namespace multi {
 namespace base {
 
 
-// TODO: create custom exceptions
 
 /**
  * @brief Base encodings
  * 
  */
-enum Type : char
+enum type : char
 {
 	// Identity          = 0x00,
-	// Base1             = '1',
-	// Base2             = '0',
-	// Base8             = '7',
-	// Base10            = '9',
-	Base16            = 'f',
-	// Base16Upper       = 'F',
-	Base32            = 'b',
-	// Base32Upper       = 'B',
-	// Base32pad         = 'c',
-	// Base32padUpper    = 'C',
-	// Base32hex         = 'v',
-	// Base32hexUpper    = 'V',
-	// Base32hexPad      = 't',
-	// Base32hexPadUpper = 'T',
-	// Base58Flickr      = 'Z',
-	Base58BTC         = 'z',
-	Base64            = 'm'
-	// Base64url         = 'u',
-	// Base64pad         = 'M',
-	// Base64urlPad      = 'U'
+	// b1             = '1',
+	// b2             = '0',
+	// b8             = '7',
+	// b10            = '9',
+	b16            = 'f',
+	// b16Upper       = 'F',
+	b32            = 'b',
+	// b32Upper       = 'B',
+	// b32pad         = 'c',
+	// b32padUpper    = 'C',
+	// b32hex         = 'v',
+	// b32hexUpper    = 'V',
+	// b32hexPad      = 't',
+	// b32hexPadUpper = 'T',
+	// b58Flickr      = 'Z',
+	b58BTC         = 'z',
+	b64            = 'm'
+	// b64url         = 'u',
+	// b64pad         = 'M',
+	// b64urlPad      = 'U'
 };
 
 
-static const int8_t mapBase58[256] = {
+
+constexpr int8_t mapBase58[256] = {
 		-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
 		-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
 		-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
@@ -63,65 +63,40 @@ static const int8_t mapBase58[256] = {
 		-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,
 };
 
-/**
- * @brief A struct that's meant to be specialized for each base encoding.
- * 
- * @tparam T base encoding to be used
- */
-template<Type T>
-struct Endec final
-{
-	/**
-	 * @brief Encodes the input to the corresponding base encoding
-	 * 
-	 * @param input data
-	 * @return std::string baseX encoded string
-	 * @throws
-	 */
-	static std::string encode(const bytes&);
-	/**
-	 * @brief Decodes the string from the corresponding base encoding
-	 * 
-	 * @param encoded string
-	 * @return bytes
-	 * @throws
-	 */
-	static bytes decode(std::string);
-};
 
 
 constexpr char b16alphabet[] = "0123456789abcdef";
-template<> std::string Endec<Type::Base16>::encode(const bytes&);
-template<> bytes       Endec<Type::Base16>::decode(std::string);
+std::string b16_encode(const bytes&);
+bytes 			b16_decode(const std::string&);
 
 constexpr char b32alphabet[] = "abcdefghijklmnopqrstuvwxyz234567";
-template<> std::string Endec<Type::Base32>::encode(const bytes&);
-template<> bytes       Endec<Type::Base32>::decode(std::string);
+std::string b32_encode(const bytes&);
+bytes       b32_decode(const std::string&);
 
 constexpr char b58alphabet[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-template<> std::string Endec<Type::Base58BTC>::encode(const bytes&);
-template<> bytes       Endec<Type::Base58BTC>::decode(std::string);
+std::string b58btc_encode(const bytes&);
+bytes       b58btc_decode(const std::string&);
 
 constexpr char b64alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-template<> std::string Endec<Type::Base64>::encode(const bytes&);
-template<> bytes       Endec<Type::Base64>::decode(std::string);
+std::string b64_encode(const bytes&);
+bytes       b64_decode(const std::string&);
 
 
 
-inline std::string encode(Type t, const bytes& input) 
+inline std::string encode(const bytes& input, type t = b58BTC)
 {
 	switch(t)
 	{
-		case Type::Base16:
-			return (char) Type::Base16 + Endec<Type::Base16>().encode(input);
-		case Type::Base32:
-			return (char) Type::Base32 + Endec<Type::Base32>().encode(input);
-		case Type::Base58BTC:
-			return (char) Type::Base58BTC + Endec<Type::Base58BTC>().encode(input);
-		case Type::Base64:
-			return (char) Type::Base64 + Endec<Type::Base64>().encode(input);
+		case type::b16:
+			return (char) type::b16 + b16_encode(input);
+		case type::b32:
+			return (char) type::b32 + b32_encode(input);
+		case type::b58BTC:
+			return (char) type::b58BTC + b58btc_encode(input);
+		case type::b64:
+			return (char) type::b64 + b64_encode(input);
 		default:
-			throw new std::invalid_argument("unknown encoding");
+			throw Exception("unknown encoding");
 	}
 }
 
@@ -130,18 +105,19 @@ inline bytes decode(std::string input)
 {
 	switch(input[0])
 	{
-		case (char) Type::Base16:
-			return Endec<Type::Base16>().decode(input.substr(1, input.length() - 1));
-		case (char) Type::Base32:
-			return Endec<Type::Base32>().decode(input.substr(1, input.length() - 1));
-		case (char) Type::Base58BTC:
-			return Endec<Type::Base58BTC>().decode(input.substr(1, input.length() - 1));
-		case (char) Type::Base64:
-			return Endec<Type::Base64>().decode(input.substr(1, input.length() - 1));
+		case type::b16:
+			return b16_decode(input.substr(1, input.length() - 1));
+		case type::b32:
+			return b32_decode(input.substr(1, input.length() - 1));
+		case type::b58BTC:
+			return b58btc_decode(input.substr(1, input.length() - 1));
+		case type::b64:
+			return b64_decode(input.substr(1, input.length() - 1));
 		default:
-			throw new std::invalid_argument("invalid input string/bad encoding");
+			throw Exception("invalid input string/unknown encoding");
 	}
 }
+
 
 }
 }

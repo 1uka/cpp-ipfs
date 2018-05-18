@@ -97,8 +97,8 @@ bytes sum(const bytes& input, const Type& type)
 				{
 					CryptoPP::BLAKE2s bl2s(false, type.len());
 					bl2s.CalculateDigest(digest.data(), input.data(), input.size());
-				} else throw new std::invalid_argument("invalid blake hash code");
-			} else throw new std::invalid_argument("unknown hash function type");
+				} else throw Exception("invalid blake hash code");
+			} else throw Exception("unknown hash function type");
 	}
 
 	digest.insert(digest.begin(), type.len());

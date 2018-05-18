@@ -12,8 +12,7 @@ namespace multi {
 namespace base {
 
 
-template<>
-std::string Endec<Type::Base16>::encode(const bytes& input)
+std::string b16_encode(const bytes& input)
 {
 	size_t length = input.size();
 	std::string output;
@@ -28,32 +27,29 @@ std::string Endec<Type::Base16>::encode(const bytes& input)
 	return output;
 }
 
-template<>
-bytes Endec<Type::Base16>::decode(std::string input)
+bytes b16_decode(const std::string& input)
 {
-	const char* alphabet = b16alphabet;
 	size_t length = input.size();
 
-	if(length & 1) throw new std::invalid_argument("odd length string");
+	if(length & 1) { throw Exception("odd length string"); }
 
 	bytes output(length / 2);
 	for(size_t i = 0; i < length; i += 2)
 	{
-		const char* p = std::lower_bound(alphabet, alphabet + 16, input[i]);
-		if(*p != input[i]) throw std::invalid_argument("contains non-hex digits");
+		const char* p = std::lower_bound(b16alphabet, b16alphabet + 16, input[i]);
+		if(*p != input[i]) { throw Exception("contains non-hex digits"); }
 
-		const char* q = std::lower_bound(alphabet, alphabet + 16, input[i + 1]);
-		if(*q != input[i + 1]) throw std::invalid_argument("contains non-hex digits");
+		const char* q = std::lower_bound(b16alphabet, b16alphabet + 16, input[i + 1]);
+		if(*q != input[i + 1]) { throw Exception("contains non-hex digits"); }
 
-		output.push_back(((p - alphabet) << 4) | (q - alphabet));
+		output.push_back(((p - b16alphabet) << 4) | (q - b16alphabet));
 	}
 
 	return output;
 }
 
 
-template<>
-std::string Endec<Type::Base32>::encode(const bytes& input)
+std::string b32_encode(const bytes& input)
 {
 	size_t length = input.size();
 
@@ -78,9 +74,9 @@ std::string Endec<Type::Base32>::encode(const bytes& input)
 	return output;
 }
 
-template<>
-bytes Endec<Type::Base32>::decode(std::string input)
+bytes b32_decode(const std::string& _input)
 {
+	std::string input(_input);
 	std::replace(input.begin(), input.end(), '=', 'g');
 
 	size_t lenght = input.length();
@@ -105,8 +101,7 @@ bytes Endec<Type::Base32>::decode(std::string input)
 }
 
 
-template<>
-std::string Endec<Type::Base58BTC>::encode(const bytes& input)
+std::string b58btc_encode(const bytes& input)
 {
 	const unsigned char* pbegin = input.data(); 
 	const unsigned char* pend = input.data() + input.size();
@@ -152,8 +147,7 @@ std::string Endec<Type::Base58BTC>::encode(const bytes& input)
 	return str;
 }
 
-template<>
-bytes Endec<Type::Base58BTC>::decode(std::string input)
+bytes b58btc_decode(const std::string& input)
 {
 	const char* psz = input.c_str();
 	bytes vch;
@@ -175,7 +169,7 @@ bytes Endec<Type::Base58BTC>::decode(std::string input)
 	{
 		// Decode base58 character
 		int carry = mapBase58[(uint8_t)*psz];
-		if (carry == -1)  { throw new std::invalid_argument("invalid b58 character"); }
+		if (carry == -1)  { throw Exception("invalid b58 character"); }
 		int i = 0;
 		for (std::vector<unsigned char>::reverse_iterator it = b256.rbegin(); (carry != 0 || i < length) && (it != b256.rend()); ++it, ++i) 
 		{
@@ -189,7 +183,7 @@ bytes Endec<Type::Base58BTC>::decode(std::string input)
 	}
 	// Skip trailing spaces.
 	while (isspace(*psz)) { psz++; }
-	if (*psz != 0) { throw new std::invalid_argument("invalid b58 character"); }
+	if (*psz != 0) { throw Exception("invalid b58 character"); }
 	// Skip leading zeroes in b256.
 	std::vector<unsigned char>::iterator it = b256.begin() + (size - length);
 	while (it != b256.end() && *it == 0) { it++; }
@@ -201,9 +195,7 @@ bytes Endec<Type::Base58BTC>::decode(std::string input)
 }
 
 
-
-template<>
-std::string Endec<Type::Base64>::encode(const bytes& input)
+std::string b64_encode(const bytes& input)
 {
 	std::string output;
 	size_t i;
@@ -240,8 +232,7 @@ std::string Endec<Type::Base64>::encode(const bytes& input)
 	return output;
 }
 
-template<>
-bytes Endec<Type::Base64>::decode(std::string input)
+bytes b64_decode(const std::string& input)
 {
 	constexpr auto is_base64 = [](const unsigned char& c) -> bool { return (isalnum(c) || (c == '+') || (c == '/')); };
 	std::string alphabet(b64alphabet);
