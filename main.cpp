@@ -64,9 +64,11 @@ int main()
 
 	try
 	{
-		std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+		// std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+		std::string addr = "/ip4/0.0.0.0/tcp/1221";
 		bytes baddr = multi::addr::string2bytes(addr);
 		std::string saddr = multi::addr::bytes2string(baddr);
+		std::cout << "Parsed address: " << saddr << std::endl;
 	} catch(const Exception& e)
 	{
 		std::cout << e.what() << std::endl;

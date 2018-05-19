@@ -43,17 +43,15 @@ bytes ports2b(const std::string& s)
 {
 	int i = atoi(s.c_str());
 	if(i > UINT16_MAX) { throw Exception("failed to parse port addr; greater than UINT16_MAX"); }
-	bytes b(2);
-	b[0] = (uint8_t) i >> 8;
-	b[1] = (uint8_t) i & 0xff;
+	bytes b;
+	put_varint(b, i);
 	return b;
 }
 
 std::string portb2s(const bytes& b)
 {
 	if(b.size() > 2) { return ""; }
-	uint16_t port = ((uint16_t) b[0] << 8) + (uint16_t) b[1];
-	return std::to_string(port);
+	return std::to_string(varint(b));
 }
 
 
@@ -61,10 +59,9 @@ bytes ipfss2b(const std::string& s)
 {
 	try
 	{
-		multi::hash::Decoded mh = multi::hash::from_string(s);
-		bytes b;
+		multi::hash::Decoded mh = multi::hash::fromb58_string(s);
+		bytes b(mh.hash().begin(), mh.hash().end());
 		put_uvarint(b, mh.len());
-		b.insert(b.end(), mh.hash().begin(), mh.hash().end());
 		return b;
 	} catch(const Exception& e)
 	{
@@ -78,26 +75,27 @@ std::string ipfsb2s(const bytes& b)
 	int size;
 	size = uvarint(b, &len);
 	bytes hash(b.begin() + len, b.end());
-	// if(hash.size() != size) { throw Exception("inconsistent lengths"); }
-
-	return multi::base::encode(hash);
+	if(hash.size() != size) { throw Exception("inconsistent lengths"); }
+	put_uvarint(hash, multi::hash::sha2_256.len());
+	put_uvarint(hash, multi::hash::sha2_256.code());
+	return multi::hash::b58_string(hash);
 }
 
 
 protocol proto_with_name(const std::string& s)
 {
-	for(auto&& p : protocols)
+	for(size_t i = 0; i < protocols.size(); i++)
 	{
-		if(p.m_name == s) { return p; }
+		if(protocols[i].m_name == s) { return protocols[i]; }
 	}
 	return protocol();
 }
 
 protocol proto_with_code(const int& c)
 {
-	for(auto&& p : protocols)
+	for(size_t i = 0; i < protocols.size(); i++)
 	{
-		if(p.m_code == c) { return p; }
+		if(protocols[i].m_code == c) { return protocols[i]; }
 	}
 	return protocol();
 }
@@ -152,7 +150,7 @@ bytes string2bytes(std::string s)
 			throw Exception("failed to parse " + p.m_name);
 		}
 	}
-	
+
 	return buf;
 }
 
@@ -164,7 +162,6 @@ std::string bytes2string(bytes b)
 		int len, code;
 		code = varint(b, &len);
 		if(len <= 0) return "";
-
 		b.erase(b.begin(), b.begin() + len);
 		protocol p = proto_with_code(code);
 		if(p.m_code == 0) 
@@ -175,7 +172,6 @@ std::string bytes2string(bytes b)
 		if(p.m_size == 0) continue;
 
 		int size = size_for_addr(p, b);
-		
 		if(b.size() < size || size < 0)
 		{
 			throw Exception("invalid value for size");
@@ -185,7 +181,7 @@ std::string bytes2string(bytes b)
 		{
 			throw Exception("no transcoder for protocol " + p.m_name);
 		}
-
+		
 		try
 		{
 			std::string a = p.m_transcoder.bytes2string(bytes(b.begin(), b.begin() + size));
@@ -211,7 +207,7 @@ int size_for_addr(const protocol& p, const bytes& b)
 		return 0;
 	} else {
 		int n;
-		int x = varint(b, &n);
+		int x = uvarint(b, &n);
 		if(n <= 0) return 0;
 		return x + n;
 	}

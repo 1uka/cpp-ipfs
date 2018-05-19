@@ -430,7 +430,8 @@ private:
  * @return Decoded `Decoded` object
  */
 inline Decoded decode(const bytes& input) { return Decoded(input); }
-inline Decoded from_string(const std::string& s) { return Decoded(multi::base::decode("z" + s)); }
+inline Decoded fromb58_string(const std::string& s) { return Decoded(multi::base::b58btc_decode(s)); }
+inline std::string b58_string(const bytes& mh) { return multi::base::b58btc_encode(mh); }
 
 }  
 }

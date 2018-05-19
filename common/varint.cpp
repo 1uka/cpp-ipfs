@@ -5,10 +5,10 @@ int put_uvarint(bytes& buf, uint64_t x)
 	int i = 0;
 	while(x >= 0x80)
 	{
-		buf.insert(buf.begin() + i++, (byte) x | 0x80);
+		buf.push_back((byte) x | 0x80);
 		x >>= 7;
 	}
-	buf.insert(buf.begin() + i, (byte) x);
+	buf.push_back((byte) x);
 	return i + 1;
 }
 
