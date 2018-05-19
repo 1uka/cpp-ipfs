@@ -15,6 +15,7 @@
 #include <common/types.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <boost/algorithm/string.hpp>
+#include <iostream>
 
 #include "hash.hpp"
 
@@ -41,8 +42,8 @@ public:
 
 	explicit transcoder(strtobytes _s2b, bytestostr _b2s) : f_s2b(_s2b), f_b2s(_b2s) {};
 
-	inline bytes  string2bytes(const std::string& _s) const noexcept { return f_s2b(_s); }
-	inline std::string bytes2string(const bytes& _b) const noexcept { return f_b2s(_b); }
+	inline bytes  string2bytes(const std::string& _s) const { return f_s2b(_s); }
+	inline std::string bytes2string(const bytes& _b) const { return f_b2s(_b); }
 private:
 	strtobytes f_s2b;
 	bytestostr f_b2s;
@@ -52,16 +53,16 @@ bytes ip4s2b(const std::string&);
 bytes ip6s2b(const std::string&);
 std::string ip4b2s(const bytes&);
 std::string ip6b2s(const bytes&);
-transcoder ip4_transcoder(&ip4s2b, &ip4b2s);
-transcoder ip6_transcoder(&ip6s2b, &ip6b2s);
+static const transcoder ip4_transcoder(&ip4s2b, &ip4b2s);
+static const transcoder ip6_transcoder(&ip6s2b, &ip6b2s);
 
 bytes ports2b(const std::string&);
 std::string portb2s(const bytes&);
-transcoder port_transcoder(&ports2b, &portb2s);
+static const transcoder port_transcoder(&ports2b, &portb2s);
 
 bytes ipfss2b(const std::string&);
 std::string ipfsb2s(const bytes&);
-transcoder ipfs_transcoder(&ipfss2b, &ipfsb2s);
+static const transcoder ipfs_transcoder(&ipfss2b, &ipfsb2s);
 
 
 enum protocodes
@@ -106,13 +107,14 @@ struct protocol final
 	transcoder m_transcoder;
 };
 
+int size_for_addr(const protocol&, const bytes&);
 protocol proto_with_name(const std::string&);
 protocol proto_with_code(const int&);
 
-bytes string2bytes(const std::string&);
-std::string bytes2string(const bytes&);
+bytes string2bytes(std::string);
+std::string bytes2string(bytes);
 
-std::array<protocol, 12> protocols = {
+static const std::array<protocol, 12> protocols = {
 	protocol(P_IP4, 32, "ip4", false, ip4_transcoder),
 	protocol(P_TCP, 16, "tcp", false, port_transcoder),
 	protocol(P_UDP, 16, "udp", false, port_transcoder),

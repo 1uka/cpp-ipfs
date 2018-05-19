@@ -430,7 +430,7 @@ private:
  * @return Decoded `Decoded` object
  */
 inline Decoded decode(const bytes& input) { return Decoded(input); }
-inline Decoded from_string(const std::string& s) { return Decoded(multi::base::decode(s)); }
+inline Decoded from_string(const std::string& s) { return Decoded(multi::base::decode("z" + s)); }
 
 }  
 }

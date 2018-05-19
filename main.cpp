@@ -2,6 +2,7 @@
 #include <libmulti/hash.hpp>
 #include <libmulti/base.hpp>
 #include <libmulti/codec.hpp>
+#include <libmulti/addr.hpp>
 #include <iostream>
 
 
@@ -60,5 +61,15 @@ int main()
 	std::cout << "Hash (without prefix): " << multi::base::encode(d.hash()) << std::endl;
 	std::cout << "Hash (with codec prefix): " << multi::base::encode(with_codec) << std::endl;
 	std::cout << "Extracted prefix: " << multi::codec::extract_prefix(with_codec) << std::endl;
+
+	try
+	{
+		std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+		bytes baddr = multi::addr::string2bytes(addr);
+		std::string saddr = multi::addr::bytes2string(baddr);
+	} catch(const Exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 	return 0;
 }
