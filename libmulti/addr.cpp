@@ -84,5 +84,139 @@ std::string ipfsb2s(const bytes& b)
 }
 
 
+protocol proto_with_name(const std::string& s)
+{
+	for(auto&& p : protocols)
+	{
+		if(p.m_name == s) { return p; }
+	}
+	return protocol();
+}
+
+protocol proto_with_code(const int& c)
+{
+	for(auto&& p : protocols)
+	{
+		if(p.m_code == c) { return p; }
+	}
+	return protocol();
+}
+
+bytes string2bytes(std::string s)
+{
+	auto isBackspace = [](char c) { return c == '/'; };
+	std::vector<std::string> tokens;
+	bytes buf;
+	boost::trim_right_if(s, isBackspace);
+	boost::split(tokens, s, isBackspace);
+	if(tokens[0] != "") 
+	{ 
+		throw Exception("Invalid multiaddress, must begin with /"); 
+	}
+
+	tokens.erase(tokens.begin());
+
+	while(tokens.size() > 0)
+	{
+		protocol p = proto_with_name(tokens[0]);
+		if(p.m_code == 0) 
+		{ 
+			throw Exception("address contains invalid protocol"); 
+		}
+
+		put_varint(buf, p.m_code);
+		tokens.erase(tokens.begin());
+
+		if(p.m_size == 0) continue;
+		if(tokens.size() < 1)
+		{
+			throw Exception("protocol requires address, none given");
+		}
+
+		if(p.m_path)
+		{
+			tokens[0] = "/" + boost::join(tokens, "/");
+		}
+		if(!p.m_has_transc)
+		{
+			throw Exception("no transcoder for protocol " + p.m_name);
+		}
+
+		try
+		{
+			bytes a = p.m_transcoder.string2bytes(tokens[0]);
+			buf.insert(buf.end(), a.begin(), a.end());
+			tokens.erase(tokens.begin());
+		} catch(const Exception& e)
+		{
+			throw Exception("failed to parse " + p.m_name);
+		}
+	}
+	
+	return buf;
+}
+
+std::string bytes2string(bytes b)
+{
+	std::string s = "";
+	while(b.size() > 0)
+	{
+		int len, code;
+		code = varint(b, &len);
+		if(len <= 0) return "";
+
+		b.erase(b.begin(), b.begin() + len);
+		protocol p = proto_with_code(code);
+		if(p.m_code == 0) 
+		{ 
+			throw Exception("address contains invalid protocol"); 
+		}
+		s += "/" + p.m_name;
+		if(p.m_size == 0) continue;
+
+		int size = size_for_addr(p, b);
+		
+		if(b.size() < size || size < 0)
+		{
+			throw Exception("invalid value for size");
+		}
+
+		if(!p.m_has_transc)
+		{
+			throw Exception("no transcoder for protocol " + p.m_name);
+		}
+
+		try
+		{
+			std::string a = p.m_transcoder.bytes2string(bytes(b.begin(), b.begin() + size));
+			if(a.length() > 0)
+			{
+				s += "/" + a;
+			}
+			b.erase(b.begin(), b.begin() + size);
+		} catch(const Exception& e)
+		{
+			throw Exception("failed to parse " + p.m_name);
+		}
+	}
+
+	return s;
+}
+
+int size_for_addr(const protocol& p, const bytes& b)
+{
+	if(p.m_size > 0) {
+		return p.m_size / 8;
+	} else if(p.m_size == 0) {
+		return 0;
+	} else {
+		int n;
+		int x = varint(b, &n);
+		if(n <= 0) return 0;
+		return x + n;
+	}
+}
+
+
 }
 }

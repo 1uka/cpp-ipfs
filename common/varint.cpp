@@ -20,7 +20,10 @@ uint64_t uvarint(const bytes& buf, int* len)
 	{
 		if(buf[i] < 0x80)
 		{
-			if(i > 9 || (i == 9 && buf[i] > 1)) { throw Exception("uvarint overflow"); }
+			if(i > 9 || (i == 9 && buf[i] > 1))
+			{
+				*len = -(i + 1); 
+			}
 			if(len != NULL) { *len = i + 1; }
 			return x | ((uint64_t) buf[i]) << s;
 		}

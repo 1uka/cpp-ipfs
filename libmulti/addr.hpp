@@ -14,6 +14,7 @@
 
 #include <common/types.hpp>
 #include <boost/asio/ip/address.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "hash.hpp"
 
@@ -83,35 +84,47 @@ enum protocodes
 
 struct protocol final
 {
-	explicit protocol(int _code, int _size, std::string _name, bool _path, transcoder _transcoder = transcoder())
-		: m_code(_code), m_size(_size), m_name(_name), m_path(_path), m_transcoder(_transcoder)
+	protocol() = default;
+
+	explicit protocol(int _code, int _size, std::string _name, bool _path)
+		: m_code(_code), m_size(_size), m_name(_name), m_path(_path), m_has_transc(false)
+	{
+		put_uvarint(m_vicode, _code);
+	}
+	explicit protocol(int _code, int _size, std::string _name, bool _path, transcoder _transcoder)
+		: m_code(_code), m_size(_size), m_name(_name), m_path(_path), m_has_transc(true), m_transcoder(_transcoder)
 	{
 		put_uvarint(m_vicode, _code);
 	}
 
-private:
 	int m_code;
 	int m_size;
 	std::string m_name;
 	bytes m_vicode;
 	bool m_path;
+	bool m_has_transc;
 	transcoder m_transcoder;
 };
 
+protocol proto_with_name(const std::string&);
+protocol proto_with_code(const int&);
 
-protocol protocols[12] = {
+bytes string2bytes(const std::string&);
+std::string bytes2string(const bytes&);
+
+std::array<protocol, 12> protocols = {
 	protocol(P_IP4, 32, "ip4", false, ip4_transcoder),
 	protocol(P_TCP, 16, "tcp", false, port_transcoder),
 	protocol(P_UDP, 16, "udp", false, port_transcoder),
 	protocol(P_DCCP, 16, "dccp", false, port_transcoder),
 	protocol(P_IP6, 128, "ip6", false, ip4_transcoder),
 	protocol(P_SCTP, 16, "sctp", false, port_transcoder),
+	protocol(P_IPFS, -1, "ipfs", false, ipfs_transcoder),
 	protocol(P_UTP, 0, "utp", false),
 	protocol(P_UDT, 0, "udt", false),
 	protocol(P_QUIC, 0, "quic", false),
 	protocol(P_HTTP, 0, "http", false),
-	protocol(P_HTTPS, 0, "https", false),
-	protocol(P_IPFS, -1, "ipfs", false, ipfs_transcoder)
+	protocol(P_HTTPS, 0, "https", false)
 };
 
 }
