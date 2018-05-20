@@ -90,12 +90,12 @@ struct protocol final
 	explicit protocol(int _code, int _size, std::string _name, bool _path)
 		: m_code(_code), m_size(_size), m_name(_name), m_path(_path), m_has_transc(false)
 	{
-		put_uvarint(m_vicode, _code);
+		put_uvarint(m_vicode, m_vicode.begin(), _code);
 	}
 	explicit protocol(int _code, int _size, std::string _name, bool _path, transcoder _transcoder)
 		: m_code(_code), m_size(_size), m_name(_name), m_path(_path), m_has_transc(true), m_transcoder(_transcoder)
 	{
-		put_uvarint(m_vicode, _code);
+		put_uvarint(m_vicode, m_vicode.begin(), _code);
 	}
 
 	int m_code;
@@ -107,6 +107,21 @@ struct protocol final
 	transcoder m_transcoder;
 };
 
+static const std::array<protocol, 12> protocols = {
+	protocol(P_IP4, 32, "ip4", false, ip4_transcoder),
+	protocol(P_TCP, 16, "tcp", false, port_transcoder),
+	// protocol(P_UDP, 16, "udp", false, port_transcoder),
+	protocol(P_DCCP, 16, "dccp", false, port_transcoder),
+	protocol(P_IP6, 128, "ip6", false, ip4_transcoder),
+	// protocol(P_SCTP, 16, "sctp", false, port_transcoder),
+	// protocol(P_IPFS, -1, "ipfs", false, ipfs_transcoder)
+	// protocol(P_UTP, 0, "utp", false),
+	// protocol(P_UDT, 0, "udt", false),
+	// protocol(P_QUIC, 0, "quic", false),
+	// protocol(P_HTTP, 0, "http", false),
+	// protocol(P_HTTPS, 0, "https", false)
+} // TODO: FIX THE WEIRD SHIT HERE THIS CAUSES SEGFAULT FOR NO OBVIOUS REASON!!;
+
 int size_for_addr(const protocol&, const bytes&);
 protocol proto_with_name(const std::string&);
 protocol proto_with_code(const int&);
@@ -114,20 +129,7 @@ protocol proto_with_code(const int&);
 bytes string2bytes(std::string);
 std::string bytes2string(bytes);
 
-static const std::array<protocol, 12> protocols = {
-	protocol(P_IP4, 32, "ip4", false, ip4_transcoder),
-	protocol(P_TCP, 16, "tcp", false, port_transcoder),
-	protocol(P_UDP, 16, "udp", false, port_transcoder),
-	protocol(P_DCCP, 16, "dccp", false, port_transcoder),
-	protocol(P_IP6, 128, "ip6", false, ip4_transcoder),
-	protocol(P_SCTP, 16, "sctp", false, port_transcoder),
-	protocol(P_IPFS, -1, "ipfs", false, ipfs_transcoder),
-	protocol(P_UTP, 0, "utp", false),
-	protocol(P_UDT, 0, "udt", false),
-	protocol(P_QUIC, 0, "quic", false),
-	protocol(P_HTTP, 0, "http", false),
-	protocol(P_HTTPS, 0, "https", false)
-};
+std::vector<bytes> bytes_split(bytes);
 
 }
 
@@ -141,13 +143,21 @@ public:
 	Addr &operator=(const Addr &) = default;
 	~Addr() = default;
 
-	explicit Addr(const std::string& _s) : m_string(_s), m_raw(_s.begin(), _s.end()) {};
-	explicit Addr(const bytes& _b) : m_raw(_b), m_string(_b.begin(), _b.end()) {};
+	explicit Addr(const std::string& _s) : m_string(_s), m_raw(addr::string2bytes(_s)) {};
+	explicit Addr(const bytes& _b) : m_raw(_b), m_string(addr::bytes2string(_b)) {};
 
+	inline std::string string() const noexcept { return m_string; };
+	inline bytes raw() const noexcept { return m_raw; };
+
+	std::vector<addr::protocol> protocols() const;
+	std::string value_for_proto(const int&) const;
 private:
 	bytes m_raw;
 	std::string m_string;
 };
+
+std::vector<Addr> split(const Addr&);
+
 
 }
 

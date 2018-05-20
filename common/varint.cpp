@@ -1,14 +1,14 @@
 #include "varint.hpp"
-
-int put_uvarint(bytes& buf, uint64_t x)
+#include <iostream>
+int put_uvarint(bytes& buf, bytes::iterator it, uint64_t x)
 {
 	int i = 0;
 	while(x >= 0x80)
 	{
-		buf.push_back((byte) x | 0x80);
+		buf.insert(it + i++, (byte) x | 0x80);
 		x >>= 7;
 	}
-	buf.push_back((byte) x);
+	buf.insert(it + i, (byte) x);
 	return i + 1;
 }
 
@@ -36,11 +36,11 @@ uint64_t uvarint(const bytes& buf, int* len)
 }
 
 
-int put_varint(bytes& buf, int64_t x)
+int put_varint(bytes& buf, bytes::iterator it, int64_t x)
 {
 	uint64_t ux = ((uint64_t) x) << 1;
 	if(x < 0) { ux = ~ux; }
-	return put_uvarint(buf, ux);
+	return put_uvarint(buf, it, ux);
 }
 
 int varint(const bytes& buf, int* len)

@@ -44,7 +44,7 @@ bytes ports2b(const std::string& s)
 	int i = atoi(s.c_str());
 	if(i > UINT16_MAX) { throw Exception("failed to parse port addr; greater than UINT16_MAX"); }
 	bytes b;
-	put_varint(b, i);
+	put_varint(b, b.begin(), i);
 	return b;
 }
 
@@ -61,7 +61,7 @@ bytes ipfss2b(const std::string& s)
 	{
 		multi::hash::Decoded mh = multi::hash::fromb58_string(s);
 		bytes b(mh.hash().begin(), mh.hash().end());
-		put_uvarint(b, mh.len());
+		put_uvarint(b, b.begin(), mh.len());
 		return b;
 	} catch(const Exception& e)
 	{
@@ -76,8 +76,8 @@ std::string ipfsb2s(const bytes& b)
 	size = uvarint(b, &len);
 	bytes hash(b.begin() + len, b.end());
 	if(hash.size() != size) { throw Exception("inconsistent lengths"); }
-	put_uvarint(hash, multi::hash::sha2_256.len());
-	put_uvarint(hash, multi::hash::sha2_256.code());
+	put_uvarint(hash, hash.begin(), multi::hash::sha2_256.len());
+	put_uvarint(hash, hash.begin(), multi::hash::sha2_256.code());
 	return multi::hash::b58_string(hash);
 }
 
@@ -122,7 +122,7 @@ bytes string2bytes(std::string s)
 			throw Exception("address contains invalid protocol"); 
 		}
 
-		put_varint(buf, p.m_code);
+		put_varint(buf, buf.end(), p.m_code);
 		tokens.erase(tokens.begin());
 
 		if(p.m_size == 0) continue;
@@ -214,5 +214,97 @@ int size_for_addr(const protocol& p, const bytes& b)
 }
 
 
+std::vector<bytes> bytes_split(bytes b)
+{
+	std::vector<bytes> ret;
+	while(b.size() > 0)
+	{
+		int code, len, size;
+		code = varint(b, &len);
+		protocol p = proto_with_code(code);
+		if(p.m_code == 0)
+		{
+			throw Exception("no protocol with that code");
+		}
+
+		size = size_for_addr(p, b);
+		
+		len += size;
+		ret.push_back(bytes(b.begin(), b.begin() + len));
+		b.erase(b.begin(), b.begin() + len);
+	}
+	
+	return ret;
 }
+
+
+}
+
+std::vector<Addr> split(const Addr& ma)
+{
+	std::vector<bytes> bs;
+	try
+	{
+		bs = addr::bytes_split(ma.raw());
+	} catch(const Exception& e)
+	{
+		throw e;
+	}
+
+	std::vector<Addr> addrs(bs.size());
+	
+	for(auto&& a : bs)
+	{
+		addrs.push_back(Addr(a));
+	}
+	
+	return addrs;
+}
+
+
+std::vector<addr::protocol> Addr::protocols() const
+{
+	std::vector<addr::protocol> protos;
+	bytes buf = this->m_raw;
+	while(buf.size() > 0)
+	{
+		int code, len, size;
+		code = varint(buf, &len);
+
+		addr::protocol p = addr::proto_with_code(code);
+		if(p.m_code == 0)
+		{
+			throw Exception("multiaddress has invalid protocol code");
+		}
+
+		protos.push_back(p);
+		buf.erase(buf.begin(), buf.begin() + len);
+
+		size = addr::size_for_addr(p, buf);
+		buf.erase(buf.begin(), buf.begin() + size);
+	}
+
+	return protos;
+}
+
+std::string Addr::value_for_proto(const int& code) const
+{
+	for(auto&& sub : split(*this))
+	{
+		if(sub.string() == "") continue;
+		addr::protocol p = sub.protocols()[0];
+		if(p.m_code == code)
+		{
+			if(p.m_size == 0) return "";
+			std::vector<std::string> res;
+			std::string s = sub.string();
+			boost::split(res, s, [](char c) { return c == '/';});
+			return res.back();
+		}
+	}
+	
+	return "";
+}
+
+
 }
