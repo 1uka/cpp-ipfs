@@ -120,7 +120,8 @@ static const std::array<protocol, 12> protocols = {
 	// protocol(P_QUIC, 0, "quic", false),
 	// protocol(P_HTTP, 0, "http", false),
 	// protocol(P_HTTPS, 0, "https", false)
-} // TODO: FIX THE WEIRD SHIT HERE THIS CAUSES SEGFAULT FOR NO OBVIOUS REASON!!;
+}; 
+// TODO: FIX THE WEIRD SHIT HERE THIS CAUSES SEGFAULT FOR NO OBVIOUS REASON!!
 
 int size_for_addr(const protocol&, const bytes&);
 protocol proto_with_name(const std::string&);
