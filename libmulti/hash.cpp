@@ -101,8 +101,8 @@ bytes sum(const bytes& input, const Type& type)
 			} else throw Exception("unknown hash function type");
 	}
 
-	put_uvarint(digest, digest.begin(), type.len());
-	put_uvarint(digest, digest.begin(), type.code());
+	put_uvarint(digest, type.len());
+	put_uvarint(digest, type.code());
 	
 	return digest;
 }

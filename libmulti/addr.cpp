@@ -44,7 +44,7 @@ bytes ports2b(const std::string& s)
 	int i = atoi(s.c_str());
 	if(i > UINT16_MAX) { throw Exception("failed to parse port addr; greater than UINT16_MAX"); }
 	bytes b;
-	put_varint(b, b.begin(), i);
+	put_varint(b, i);
 	return b;
 }
 
@@ -61,7 +61,7 @@ bytes ipfss2b(const std::string& s)
 	{
 		multi::hash::Decoded mh = multi::hash::fromb58_string(s);
 		bytes b(mh.hash().begin(), mh.hash().end());
-		put_uvarint(b, b.begin(), mh.len());
+		put_uvarint(b, mh.len());
 		return b;
 	} catch(const Exception& e)
 	{
@@ -76,8 +76,8 @@ std::string ipfsb2s(const bytes& b)
 	size = uvarint(b, &len);
 	bytes hash(b.begin() + len, b.end());
 	if(hash.size() != size) { throw Exception("inconsistent lengths"); }
-	put_uvarint(hash, hash.begin(), multi::hash::sha2_256.len());
-	put_uvarint(hash, hash.begin(), multi::hash::sha2_256.code());
+	put_uvarint(hash, multi::hash::sha2_256.len());
+	put_uvarint(hash, multi::hash::sha2_256.code());
 	return multi::hash::b58_string(hash);
 }
 
@@ -114,7 +114,7 @@ bytes string2bytes(std::string s)
 
 	tokens.erase(tokens.begin());
 
-	while(tokens.size() > 0)
+	while(tokens.size() > 0)	
 	{
 		protocol p = proto_with_name(tokens[0]);
 		if(p.m_code == 0) 
@@ -122,7 +122,7 @@ bytes string2bytes(std::string s)
 			throw Exception("address contains invalid protocol"); 
 		}
 
-		put_varint(buf, buf.end(), p.m_code);
+		put_varint(buf, p.m_code, VINT_SUFFIX);
 		tokens.erase(tokens.begin());
 
 		if(p.m_size == 0) continue;

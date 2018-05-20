@@ -64,11 +64,12 @@ int main()
 
 	try
 	{
-		std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
-		// std::string addr = "/ip4/0.0.0.0/tcp/1221";
+		// std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+		std::string addr = "/ip4/0.0.0.0/tcp/1221";
 		multi::Addr* ma = new multi::Addr(addr);
 		std::cout << "To string: " << ma->string() << std::endl;
-		// std::cout << "Value for ip4: " << ma->value_for_proto(multi::addr::protocodes::P_IP4) << std::endl;
+		std::cout << "Value for ip4: " << ma->value_for_proto(multi::addr::protocodes::P_IP4) << std::endl;
+		std::cout << "Value for tcp: " << ma->value_for_proto(multi::addr::protocodes::P_TCP) << std::endl;
 		delete ma;
 	} catch(const Exception& e)
 	{
