@@ -7,13 +7,12 @@
  */
 
 
-#ifndef MULTIADDR_H
-#define MULTIADDR_H
-
+#pragma once
 
 
 #include <common/types.hpp>
-#include <boost/asio/ip/address.hpp>
+#include <common/varint.hpp>
+
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 
@@ -23,13 +22,6 @@
 namespace multi {
 namespace addr {
 
-using ipaddr = boost::asio::ip::address;
-
-using ip4addr = boost::asio::ip::address_v4;
-using ip4bytes = ip4addr::bytes_type;
-
-using ip6addr = boost::asio::ip::address_v6;
-using ip6bytes = ip6addr::bytes_type;
 
 typedef bytes (*strtobytes)(const std::string&);
 typedef std::string (*bytestostr)(const bytes&);
@@ -166,6 +158,3 @@ std::vector<Addr> split(const Addr&);
 
 
 }
-
-
-#endif // !MULTIADDR_H

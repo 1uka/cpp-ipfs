@@ -1,7 +1,13 @@
+/**
+ * @brief varint implementation (referenced from Go's varint implementation)
+ * 
+ * @file varint.cpp
+ * @author Luka Atanasovski
+ * @date 2018-05-20
+ */
+
 #pragma once
 
-#ifndef VARINT_H
-#define VARINT_H
 
 #include "types.hpp"
 
@@ -14,5 +20,3 @@ uint64_t uvarint(const bytes&, int* len = 0);
 
 int put_varint(bytes&, int64_t, bool prefix = VINT_PREFIX);
 int varint(const bytes&, int* len = 0);
-
-#endif // !VARINT_H

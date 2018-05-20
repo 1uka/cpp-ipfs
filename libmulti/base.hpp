@@ -6,8 +6,7 @@
  * @date 2018-05-15
  */
 
-#ifndef MULTIBASE_H
-#define MULTIBASE_H
+#pragma once
 
 
 #include <common/types.hpp>
@@ -125,7 +124,3 @@ inline bytes decode(std::string input)
 
 }
 }
-
-
-
-#endif // !MULTIBASE_H

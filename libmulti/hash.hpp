@@ -7,11 +7,12 @@
  */
 
 
-#ifndef MULTIHASH_H
-#define MULTIHASH_H
+#pragma once
 
 
 #include <common/types.hpp>
+#include <common/varint.hpp>
+
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
 #include <cryptopp/keccak.h>
@@ -435,5 +436,3 @@ inline std::string b58_string(const bytes& mh) { return multi::base::b58btc_enco
 
 }  
 }
-
-#endif // !MULTIHASH_H

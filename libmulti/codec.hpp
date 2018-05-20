@@ -7,8 +7,7 @@
  */
 
 
-#ifndef MULTICODEC_H
-#define MULTICODEC_H
+#pragma once
 
 
 #include <common/types.hpp>
@@ -206,5 +205,3 @@ inline void remove_prefix(bytes& buf) { } // TODO: remove uvarint prefix from bu
 }
 }
 
-
-#endif // !MULTICODEC_H
