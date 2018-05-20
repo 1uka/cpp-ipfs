@@ -5,21 +5,11 @@ int put_uvarint(bytes& buf, uint64_t x, bool prefix)
 	int i = 0;
 	while(x >= 0x80)
 	{
-		if(prefix)
-		{
-			buf.insert(buf.begin() + i, (byte) x | 0x80);
-		} else {
-			buf.push_back((byte) x);
-		}
+		prefix ? (void) buf.insert(buf.begin() + i, (byte) x | 0x80) : buf.push_back((byte) x | 0x80);
 		i++;
 		x >>= 7;
 	}
-	if(prefix)
-	{
-		buf.insert(buf.begin() + i, (byte) x);
-	} else {
-		buf.push_back((byte) x);
-	}
+	prefix ? (void) buf.insert(buf.begin() + i, (byte) x) : buf.push_back((byte) x);
 	return i + 1;
 }
 
