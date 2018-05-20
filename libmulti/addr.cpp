@@ -307,4 +307,27 @@ std::string Addr::value_for_proto(const int& code) const
 }
 
 
+Addr Addr::encapsulate(const Addr& o)
+{
+	bytes mb = this->m_raw;
+	bytes ob = o.raw();
+	mb.insert(mb.end(), ob.begin(), ob.end());
+	return Addr(mb);
+}
+
+Addr Addr::decapsulate(const Addr& o)
+{
+	std::string s1 = this->m_string;
+	std::string s2 = o.string();
+
+	size_t i = s1.rfind(s2);
+	if(i == std::string::npos)
+	{
+		return Addr(*this);
+	}
+
+	return Addr(std::string(s1.begin(), s1.begin() + i));
+}
+
+
 }

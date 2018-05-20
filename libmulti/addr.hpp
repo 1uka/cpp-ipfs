@@ -144,11 +144,19 @@ public:
 	explicit Addr(const std::string& _s) : m_string(_s), m_raw(addr::string2bytes(_s)) {};
 	explicit Addr(const bytes& _b) : m_raw(_b), m_string(addr::bytes2string(_b)) {};
 
+	friend inline bool operator==(const Addr& l, const Addr& r) { return l.string().compare(r.string()) == 0; }
+
 	inline std::string string() const noexcept { return m_string; };
 	inline bytes raw() const noexcept { return m_raw; };
 
 	std::vector<addr::protocol> protocols() const;
 	std::string value_for_proto(const int&) const;
+
+	Addr encapsulate(const Addr&);
+	Addr decapsulate(const Addr&);
+	inline Addr encapsulate(const std::string& s) { return this->encapsulate(Addr(s)); };
+	inline Addr decapsulate(const std::string& s) { return this->decapsulate(Addr(s)); };
+
 private:
 	bytes m_raw;
 	std::string m_string;

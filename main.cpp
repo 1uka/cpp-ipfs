@@ -70,6 +70,17 @@ int main()
 		std::cout << "To string: " << ma->string() << std::endl;
 		std::cout << "Value for ip4: " << ma->value_for_proto(multi::addr::protocodes::P_IP4) << std::endl;
 		std::cout << "Value for tcp: " << ma->value_for_proto(multi::addr::protocodes::P_TCP) << std::endl;
+		multi::Addr* ma2 = new multi::Addr(addr);
+		if(*ma == *ma2)
+		{
+			std::cout << "EQUAL" << std::endl;
+		} else {
+			std::cout << "MA: " << ma->string() << std::endl;
+			std::cout << "MA2: " << ma2->string() << std::endl;
+		}
+		multi::Addr decaps = ma->decapsulate("/tcp/1221");
+		std::cout << "Decapsulated: " << decaps.string() << std::endl;
+		delete ma2;
 		delete ma;
 	} catch(const Exception& e)
 	{
