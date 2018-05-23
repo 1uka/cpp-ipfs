@@ -14,7 +14,6 @@
 #include <common/varint.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <iostream>
 
 #include "hash.hpp"
 
@@ -79,11 +78,11 @@ struct protocol final
 {
 	protocol() = default;
 
-	explicit protocol(int _code, int _size, std::string _name, bool _path)
+	explicit protocol(int _code, int _size, const std::string& _name, bool _path)
 		: m_code(_code), m_size(_size), m_name(_name), m_path(_path), m_has_transc(false)
 	{
 	}
-	explicit protocol(int _code, int _size, std::string _name, bool _path, transcoder _transcoder)
+	explicit protocol(int _code, int _size, const std::string& _name, bool _path, const transcoder& _transcoder)
 		: m_code(_code), m_size(_size), m_name(_name), m_path(_path), m_has_transc(true), m_transcoder(_transcoder)
 	{
 	}
