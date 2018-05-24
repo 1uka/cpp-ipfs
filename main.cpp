@@ -1,8 +1,11 @@
 #include <common/types.hpp>
+#include <crypto/key.hpp>
+
 #include <libmulti/hash.hpp>
 #include <libmulti/base.hpp>
 #include <libmulti/codec.hpp>
 #include <libmulti/addr.hpp>
+#include <libmulti/stream.hpp>
 #include <iostream>
 
 
@@ -82,6 +85,22 @@ int main()
 		std::cout << "Decapsulated: " << decaps.string() << std::endl;
 		delete ma2;
 		delete ma;
+	} catch(const Exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
+
+	std::cout << "Initiating ostream test" << std::endl;;
+	std::stringbuf buf;
+	std::istream is(&buf);
+	std::ostream os(&buf);
+	std::string msg = "jas sum luka atanasovski\n";
+	put_uvarint(os, msg.size());
+	os << msg;
+	try
+	{
+		bytes streamdata = multi::stream::lp_read_buf(is);
+		std::cout << streamdata.data() << std::endl;
 	} catch(const Exception& e)
 	{
 		std::cout << e.what() << std::endl;

@@ -61,7 +61,7 @@ bytes sum(const bytes& input, const Type& type)
 					CryptoPP::BLAKE2b(false, type.len()).CalculateDigest(digest.data(), input.data(), input.size());
 				} else if(lb >= 0x41 && lb <= 0x60)
 				{
-					CryptoPP::BLAKE2s(false, type.len).CalculateDigest(digest.data(), input.data(), input.size());
+					CryptoPP::BLAKE2s(false, type.len()).CalculateDigest(digest.data(), input.data(), input.size());
 				} else throw Exception("invalid blake hash code");
 			} else throw Exception("unknown hash function type");
 	}

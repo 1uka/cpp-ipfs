@@ -13,6 +13,19 @@ int put_uvarint(bytes& buf, uint64_t x, bool prefix)
 	return i + 1;
 }
 
+int put_uvarint(std::ostream& os, uint64_t x)
+{
+	int i = 0;
+	while(x >= 0x80)
+	{
+		os << ((byte) x | 0x80);
+		i++;
+		x >>= 7;
+	}
+	os << (byte) x;
+	return i + 1;
+}
+
 uint64_t uvarint(const bytes& buf, int* len)
 {
 	uint64_t x = 0;
@@ -36,6 +49,30 @@ uint64_t uvarint(const bytes& buf, int* len)
 	return 0;
 }
 
+uint64_t uvarint(std::istream& is, int* len)
+{
+	uint64_t x = 0;
+	unsigned int s = 0;
+	for (size_t i = 0; i < 10; i++)
+	{
+		byte y;
+		is >> y;
+		if(y < 0x80)
+		{
+			if(i > 9 || (i == 9 && y > 1))
+			{
+				*len = -(i + 1); 
+			}
+			if(len != NULL) { *len = i + 1; }
+			return x | ((uint64_t) y) << s;
+		}
+
+		x |= ((uint64_t) y & 0x7f) << s;
+		s += 7;
+	}
+	if(len != NULL) { *len = 0; }
+	return 0;
+}
 
 int put_varint(bytes& buf, int64_t x, bool prefix)
 {
