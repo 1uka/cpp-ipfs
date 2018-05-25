@@ -30,6 +30,88 @@ bytes lp_read_buf(std::istream& is)
 	return buf;
 }
 
+std::vector<std::string> ls(std::iostream& rw)
+{
+	delim_write(rw, bytes({'l', 's'}));
+	uint64_t n = uvarint(rw);
+	std::vector<std::string> res(n);
+	while(n--)
+	{
+		bytes val;
+		try
+		{
+			val = lp_read_buf(rw);
+		} catch(const Exception& e)
+		{
+			throw e;
+		}
+		res.push_back(std::string(val.begin(), val.end()));
+	}
+
+	return res;
+}
+
+void Muxer::add_handler(const std::string& proto, match_func match, handler_func handler)
+{
+	this->handler_lock.lock();
+	this->__remove_handler(proto);
+	this->handlers.push_back(Handler(match, handler, proto));
+	this->handler_lock.unlock();
+}
+
+void Muxer::__remove_handler(const std::string& proto)
+{
+	for(size_t i = 0; i < this->handlers.size(); i++)
+	{
+		if(this->handlers[i].add_name == proto)
+		{
+			this->handlers.erase(this->handlers.begin() + i);
+			return;
+		}
+	}
+}
+
+void Muxer::remove_handler(const std::string& proto)
+{
+	this->handler_lock.lock();
+	this->__remove_handler(proto);
+	this->handler_lock.unlock();
+}
+
+std::vector<std::string> Muxer::protocols()
+{
+	this->handler_lock.lock();
+	std::vector<std::string> res;
+	
+	for(auto&& h : this->handlers)
+	{
+		res.push_back(h.add_name);
+	}
+	
+	this->handler_lock.unlock();
+	return res;
+}
+
+Handler* Muxer::__find_handler(const std::string& proto)
+{
+	this->handler_lock.lock();
+	
+	for(auto&& h : this->handlers)
+	{
+		if(h.match(proto)) 
+		{
+			return &h;
+		}
+	}
+
+	return 0;
+}
+
+void Muxer::negotiate_lazy(std::iostream& rw)
+{
+	lazy_conn* lzc = new lazy_conn(rw);
+	// TODO: async wait for handshake and stuff
+}
 
 }
 }

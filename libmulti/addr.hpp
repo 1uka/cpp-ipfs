@@ -137,8 +137,8 @@ public:
 
 	friend inline bool operator==(const Addr& l, const Addr& r) { return l.string().compare(r.string()) == 0; }
 
-	inline std::string string() const noexcept { return m_string; };
-	inline bytes raw() const noexcept { return m_raw; };
+	inline std::string string() const { return m_string; };
+	inline bytes raw() const { return m_raw; };
 
 	std::vector<addr::protocol> protocols() const;
 	std::string value_for_proto(const int&) const;
