@@ -2,6 +2,7 @@
 
 #include <common/types.hpp>
 #include <common/varint.hpp>
+#include <common/channel.hpp>
 
 #include <iostream>
 #include <thread>
@@ -68,7 +69,7 @@ struct lazy_conn
 	static std::once_flag wait_flag; // watch out for this, might cause some bug
 	std::iostream& rw;
 
-	inline void wait_for_handshake(std::function<void()> f) { std::call_once(wait_flag, f); };
+	inline static void wait_for_handshake(std::function<void()> f) { std::call_once(wait_flag, f); };
 };
 
 
@@ -76,6 +77,8 @@ void delim_write(std::ostream&, const bytes&);
 bytes lp_read_buf(std::istream&);
 std::vector<std::string> ls(std::iostream&);
 
+std::string read_next_token(std::iostream&);
+bytes read_next_token_bytes(std::iostream&);
 
 }
 }

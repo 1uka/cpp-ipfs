@@ -19,15 +19,19 @@ bytes lp_read_buf(std::istream& is)
 		throw Exception("incoming message too large");
 	}
 	
-	bytes buf(len);
-	is.get((char*) buf.data(), len); // TODO: this might cause a bug
-	if(buf.size() == 0 || buf.back() != (byte) '\n') // FIXME: somehow the newline char gets lost/formatted
+	char buf[len];
+	memset(buf, 0, len);
+	
+	size_t i = 0;
+	while(is.get(buf[i++]) && i < len);
+	
+	if(buf[len - 1] != '\n')
 	{
 		throw Exception("message did not have trailing newline");
 	}
 
-	buf.pop_back();
-	return buf;
+	bytes ret(buf, buf + len - 1);
+	return ret;
 }
 
 std::vector<std::string> ls(std::iostream& rw)
@@ -107,10 +111,99 @@ Handler* Muxer::__find_handler(const std::string& proto)
 	return 0;
 }
 
+
+bytes read_next_token_bytes(std::iostream& rw)
+{
+	bytes data;
+	try
+	{
+		data = lp_read_buf(rw);
+	} catch(const Exception& e)
+	{
+		// TODO: handle error here
+		throw e;
+	}
+
+	return data;
+}
+
+std::string read_next_token(std::iostream& rw)
+{
+	bytes tok;
+	try
+	{
+		tok = read_next_token_bytes(rw);
+	} catch(const Exception& e)
+	{
+		throw e;
+	}
+	return std::string(tok.begin(), tok.end());
+}
+
+
 void Muxer::negotiate_lazy(std::iostream& rw)
 {
+	chan_buffered_t<std::string> pval(1);
+	chan_buffered_t<Exception> werr(1);
+
+	chan_t<int> started;
+	int sink;
 	lazy_conn* lzc = new lazy_conn(rw);
-	// TODO: async wait for handshake and stuff
+	std::thread(lazy_conn::wait_for_handshake, [&started, &pval, &rw]() -> void {
+		started.close();
+
+		delim_write(rw, bytes(proto_id, proto_id + 19));
+		
+		for(auto&& proto : pval)
+		{
+			delim_write(rw, bytes(proto.begin(), proto.end()));
+		}
+		
+	});
+	started.pop(sink);
+
+	std::string line;
+	try
+	{
+		line = read_next_token(rw);
+	} catch(const Exception& e)
+	{
+		throw e;
+	}
+
+	if(line != proto_id)
+	{
+		delete &rw;
+		throw Exception("incorrect proto version");
+	}
+
+	while(true)
+	{
+		try
+		{
+			line = read_next_token(rw);
+		} catch(const Exception& e)
+		{
+			throw e;
+		}
+
+		if(line == "ls") {
+			pval.push("ls");
+		} else {
+			Handler* h = this->__find_handler(line);
+			if(h == nullptr)
+			{
+				pval.push("na");
+				continue;
+			}
+
+			pval.push(line);
+
+			return;
+		}
+	}
+
+
 }
 
 }
