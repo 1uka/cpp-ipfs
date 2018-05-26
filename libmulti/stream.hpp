@@ -8,6 +8,22 @@
 #include <thread>
 
 namespace multi {
+
+/**
+ * @brief Multistream interface class
+ * 
+ */
+class Stream
+{
+public:
+	Stream() = default;
+	virtual ~Stream() = default;
+
+	virtual int read(bytes&) = 0;
+	virtual int write(const bytes&) = 0;
+};
+
+
 namespace stream {
 
 constexpr char const proto_id[] = "/multistream/1.0.0";
@@ -50,7 +66,7 @@ public:
 	void remove_handler(const std::string&);
 	std::vector<std::string> protocols();
 
-	void negotiate_lazy(std::iostream&);
+	multi::Stream* negotiate_lazy(std::iostream&);
 	void negotiate();
 
 private:
@@ -62,14 +78,19 @@ private:
 };
 
 
-struct lazy_conn
+class lazy_conn : public multi::Stream
 {
-	explicit lazy_conn(std::iostream& _rw) : rw(_rw) {};
+public:
+	explicit lazy_conn(std::iostream& _rw) : multi::Stream(), rw(_rw) {};
 
-	static std::once_flag wait_flag; // watch out for this, might cause some bug
+	static std::once_flag wait_flag;
+	inline static void wait_for_handshake(std::function<void()> f) { std::call_once(lazy_conn::wait_flag, f); };
+
+	int read(bytes&);
+	int write(const bytes&);
+
+private:
 	std::iostream& rw;
-
-	inline static void wait_for_handshake(std::function<void()> f) { std::call_once(wait_flag, f); };
 };
 
 

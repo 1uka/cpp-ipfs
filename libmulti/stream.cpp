@@ -4,6 +4,7 @@
 namespace multi {
 namespace stream {
 
+std::once_flag lazy_conn::wait_flag;
 
 void delim_write(std::ostream& os, const bytes& mes)
 {
@@ -120,7 +121,6 @@ bytes read_next_token_bytes(std::iostream& rw)
 		data = lp_read_buf(rw);
 	} catch(const Exception& e)
 	{
-		// TODO: handle error here
 		throw e;
 	}
 
@@ -141,11 +141,9 @@ std::string read_next_token(std::iostream& rw)
 }
 
 
-void Muxer::negotiate_lazy(std::iostream& rw)
+multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
 {
-	chan_buffered_t<std::string> pval(1);
-	chan_buffered_t<Exception> werr(1);
-
+	chan_t<std::string> pval;
 	chan_t<int> started;
 	int sink;
 	lazy_conn* lzc = new lazy_conn(rw);
@@ -154,12 +152,12 @@ void Muxer::negotiate_lazy(std::iostream& rw)
 
 		delim_write(rw, bytes(proto_id, proto_id + 19));
 		
-		for(auto&& proto : pval)
+		std::string proto;
+		while(pval.pop(proto) != boost::fibers::channel_op_status::closed)
 		{
 			delim_write(rw, bytes(proto.begin(), proto.end()));
 		}
-		
-	});
+	}).detach();
 	started.pop(sink);
 
 	std::string line;
@@ -168,12 +166,13 @@ void Muxer::negotiate_lazy(std::iostream& rw)
 		line = read_next_token(rw);
 	} catch(const Exception& e)
 	{
+		pval.close();
 		throw e;
 	}
 
 	if(line != proto_id)
 	{
-		delete &rw;
+		std::cout << line << std::endl;
 		throw Exception("incorrect proto version");
 	}
 
@@ -184,6 +183,7 @@ void Muxer::negotiate_lazy(std::iostream& rw)
 			line = read_next_token(rw);
 		} catch(const Exception& e)
 		{
+			pval.close();
 			throw e;
 		}
 
@@ -198,12 +198,29 @@ void Muxer::negotiate_lazy(std::iostream& rw)
 			}
 
 			pval.push(line);
-
-			return;
+			pval.close();
+			return lzc;
 		}
 	}
+	pval.close();
+	return 0;
+}
 
+int lazy_conn::read(bytes& buf)
+{
+	char c;
+	buf.clear();
+	while(this->rw.get(c))
+	{
+		buf.push_back(c);
+	}
+	return buf.size();
+}
 
+int lazy_conn::write(const bytes& buf)
+{
+	rw << buf.data();
+	return buf.size();
 }
 
 }

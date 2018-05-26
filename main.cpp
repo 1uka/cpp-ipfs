@@ -90,20 +90,27 @@ int main()
 		std::cout << e.what() << std::endl;
 	}
 
-	std::cout << "Initiating ostream test" << std::endl;;
-	std::stringbuf buf;
-	std::istream is(&buf);
-	std::ostream os(&buf);
-	std::string msg = "jas sum luka atanasovski\n";
-	put_uvarint(os, msg.size());
-	os << msg;
+	std::cout << "Initiating ostream test" << std::endl;
+
+	std::stringbuf* buf = new std::stringbuf();
+	std::iostream* rw = new std::iostream(buf);
+	multi::Stream* ms;
 	try
 	{
-		bytes streamdata = multi::stream::lp_read_buf(is);
-		std::cout << streamdata.data() << std::endl;
+		std::string m = "/multistream/1.0.0";
+		multi::stream::delim_write(*rw, bytes(m.begin(), m.end()));
+		ms = multi::stream::Muxer().negotiate_lazy(*rw);
 	} catch(const Exception& e)
 	{
 		std::cout << e.what() << std::endl;
+		delete buf;
+		delete rw;
+		return -1;
 	}
+	ms->read(dec);
+	std::cout << "from multistream: " << std::string(dec.begin(), dec.end()) << std::endl;
+	delete buf;
+	delete ms;
+	delete rw;
 	return 0;
 }
