@@ -4,7 +4,7 @@
 namespace multi {
 namespace stream {
 
-std::once_flag lazy_conn::wait_flag;
+std::once_flag lazy_srv::wait_flag;
 
 void delim_write(std::ostream& os, const bytes& mes)
 {
@@ -28,6 +28,7 @@ bytes lp_read_buf(std::istream& is)
 	
 	if(buf[len - 1] != '\n')
 	{
+		std::cout << buf;
 		throw Exception("message did not have trailing newline");
 	}
 
@@ -146,14 +147,14 @@ multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
 	chan_t<std::string> pval;
 	chan_t<int> started;
 	int sink;
-	lazy_conn* lzc = new lazy_conn(rw);
-	std::thread(lazy_conn::wait_for_handshake, [&started, &pval, &rw]() -> void {
+	lazy_srv* lzc = new lazy_srv(rw);
+	std::thread(lazy_srv::wait_for_handshake, [&started, &pval, &rw]() -> void {
 		started.close();
 
-		delim_write(rw, bytes(proto_id, proto_id + 19));
+		delim_write(rw, bytes(proto_id.begin(), proto_id.end()));
 		
 		std::string proto;
-		while(pval.pop(proto) != boost::fibers::channel_op_status::closed)
+		while(!pval.is_closed() && pval.pop(proto) != boost::fibers::channel_op_status::closed)
 		{
 			delim_write(rw, bytes(proto.begin(), proto.end()));
 		}
@@ -172,7 +173,6 @@ multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
 
 	if(line != proto_id)
 	{
-		std::cout << line << std::endl;
 		throw Exception("incorrect proto version");
 	}
 
@@ -206,7 +206,7 @@ multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
 	return 0;
 }
 
-int lazy_conn::read(bytes& buf)
+int lazy_srv::read(bytes& buf)
 {
 	char c;
 	buf.clear();
@@ -217,8 +217,9 @@ int lazy_conn::read(bytes& buf)
 	return buf.size();
 }
 
-int lazy_conn::write(const bytes& buf)
+int lazy_srv::write(const bytes& buf)
 {
+	this->wait_for_handshake([]() -> void { throw Exception("didn't initiate handhsake"); });
 	rw << buf.data();
 	return buf.size();
 }

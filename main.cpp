@@ -95,16 +95,25 @@ int main()
 	std::stringbuf* buf = new std::stringbuf();
 	std::iostream* rw = new std::iostream(buf);
 	multi::Stream* ms;
+	multi::stream::Muxer mx;
+	mx.add_handler("handleme", [](const std::string& s, std::iostream& is) -> void{
+		std::cout << "im handled\n"; 
+	});
 	try
 	{
 		std::string m = "/multistream/1.0.0";
+		std::string m2 = "handleme";
+
+		multi::stream::delim_write(*rw, bytes(m2.begin(), m2.end()));
 		multi::stream::delim_write(*rw, bytes(m.begin(), m.end()));
-		ms = multi::stream::Muxer().negotiate_lazy(*rw);
+
+		ms = mx.negotiate_lazy(*rw);
 	} catch(const Exception& e)
 	{
 		std::cout << e.what() << std::endl;
 		delete buf;
 		delete rw;
+		rw->clear();
 		return -1;
 	}
 	ms->read(dec);

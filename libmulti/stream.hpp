@@ -26,7 +26,7 @@ public:
 
 namespace stream {
 
-constexpr char const proto_id[] = "/multistream/1.0.0";
+static std::string const proto_id = "/multistream/1.0.0";
 
 
 using match_func 		= std::function<bool(const std::string&)>;
@@ -78,13 +78,13 @@ private:
 };
 
 
-class lazy_conn : public multi::Stream
+class lazy_srv : public multi::Stream
 {
 public:
-	explicit lazy_conn(std::iostream& _rw) : multi::Stream(), rw(_rw) {};
+	explicit lazy_srv(std::iostream& _rw) : multi::Stream(), rw(_rw) {};
 
 	static std::once_flag wait_flag;
-	inline static void wait_for_handshake(std::function<void()> f) { std::call_once(lazy_conn::wait_flag, f); };
+	inline static void wait_for_handshake(std::function<void()> f) { std::call_once(lazy_srv::wait_flag, f); };
 
 	int read(bytes&);
 	int write(const bytes&);
