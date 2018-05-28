@@ -5,11 +5,21 @@ namespace multi {
 namespace stream {
 
 std::once_flag lazy_srv::wait_flag;
+std::once_flag lazy_cli::rflag;
+std::once_flag lazy_cli::wflag;
+
+void delim_write(bytes& buf, const bytes& mes)
+{
+	put_uvarint(buf, mes.size() + 1);
+	buf.insert(buf.end(), mes.begin(), mes.end());
+	buf.push_back('\n');
+}
 
 void delim_write(std::ostream& os, const bytes& mes)
 {
 	put_uvarint(os, mes.size() + 1);
-	os << mes.data() << '\n';
+	os.write((const char*) mes.data(), mes.size());
+	os << '\n';
 }
 
 bytes lp_read_buf(std::istream& is)
@@ -19,16 +29,13 @@ bytes lp_read_buf(std::istream& is)
 	{
 		throw Exception("incoming message too large");
 	}
-	
+
 	char buf[len];
-	memset(buf, 0, len);
-	
-	size_t i = 0;
-	while(is.get(buf[i++]) && i < len);
+	memset(buf, 0, sizeof(buf));
+	is.read(buf, sizeof(buf));
 	
 	if(buf[len - 1] != '\n')
 	{
-		std::cout << buf;
 		throw Exception("message did not have trailing newline");
 	}
 
@@ -38,7 +45,7 @@ bytes lp_read_buf(std::istream& is)
 
 std::vector<std::string> ls(std::iostream& rw)
 {
-	delim_write(rw, bytes({'l', 's'}));
+	delim_write(rw, "ls");
 	uint64_t n = uvarint(rw);
 	std::vector<std::string> res(n);
 	while(n--)
@@ -106,10 +113,12 @@ Handler* Muxer::__find_handler(const std::string& proto)
 	{
 		if(h.match(proto)) 
 		{
+			this->handler_lock.unlock();
 			return &h;
 		}
 	}
 
+	this->handler_lock.unlock();
 	return 0;
 }
 
@@ -148,17 +157,20 @@ multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
 	chan_t<int> started;
 	int sink;
 	lazy_srv* lzc = new lazy_srv(rw);
-	std::thread(lazy_srv::wait_for_handshake, [&started, &pval, &rw]() -> void {
+
+	do_once_async(lazy_srv::wait_flag, [&started, &pval, &rw] {
 		started.close();
 
-		delim_write(rw, bytes(proto_id.begin(), proto_id.end()));
+		delim_write(rw, proto_id);
 		
 		std::string proto;
 		while(!pval.is_closed() && pval.pop(proto) != boost::fibers::channel_op_status::closed)
 		{
-			delim_write(rw, bytes(proto.begin(), proto.end()));
+			delim_write(rw, proto);
 		}
 	}).detach();
+
+
 	started.pop(sink);
 
 	std::string line;
@@ -173,6 +185,7 @@ multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
 
 	if(line != proto_id)
 	{
+		pval.close();
 		throw Exception("incorrect proto version");
 	}
 
@@ -202,8 +215,73 @@ multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
 			return lzc;
 		}
 	}
-	pval.close();
-	return 0;
+}
+
+handler_func Muxer::negotiate(std::iostream& rw, std::string& _p)
+{
+	delim_write(rw, proto_id);
+
+	std::string line = read_next_token(rw);
+	if(line != proto_id)
+	{
+		throw Exception("incorrect proto version");
+	}
+
+	while(true)
+	{
+		try
+		{
+			line = read_next_token(rw);
+		} catch(const Exception& e)
+		{
+			throw e;
+		}
+
+		if(line == "ls") {
+		} else {
+			Handler* h = this->__find_handler(line);
+			if(h == nullptr)
+			{
+				delim_write(rw, "na");
+				continue;
+			}
+
+			delim_write(rw, line);
+			_p = line;
+			return h->handle;
+		}
+	}
+}
+
+void Muxer::ls(std::ostream& os)
+{
+	bytes buf;
+	this->handler_lock.lock();
+	put_uvarint(buf, this->handlers.size());
+
+	
+	for(auto&& h : this->handlers)
+	{
+		delim_write(buf, h.add_name);
+	}
+
+	this->handler_lock.unlock();
+	bytes ll(16);
+	int nw = put_uvarint(ll, buf.size());
+	ll.erase(buf.begin() + nw, buf.end());
+	ll.insert(ll.end(), buf.begin(), buf.end());
+	std::copy(
+		ll.begin(),
+		ll.end(),
+		std::ostream_iterator<byte>(os)
+	);
+}
+
+void Muxer::handle(std::iostream& rw)
+{
+	std::string p;
+	handler_func h = this->negotiate(rw, p);
+	return h(p, rw);
 }
 
 int lazy_srv::read(bytes& buf)
@@ -219,8 +297,8 @@ int lazy_srv::read(bytes& buf)
 
 int lazy_srv::write(const bytes& buf)
 {
-	this->wait_for_handshake([]() -> void { throw Exception("didn't initiate handhsake"); });
-	rw << buf.data();
+	do_once(lazy_srv::wait_flag, []() -> void { throw Exception("didn't initiate handhsake"); });
+	rw.write((const char*) buf.data(), buf.size());
 	return buf.size();
 }
 

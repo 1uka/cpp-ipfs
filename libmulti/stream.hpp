@@ -19,8 +19,15 @@ public:
 	Stream() = default;
 	virtual ~Stream() = default;
 
+	Stream(std::iostream&, const std::string&);
+
+	Stream(std::iostream& _rw) : rw(_rw) {};
+
 	virtual int read(bytes&) = 0;
 	virtual int write(const bytes&) = 0;
+
+protected:
+	std::iostream& rw;
 };
 
 
@@ -67,7 +74,10 @@ public:
 	std::vector<std::string> protocols();
 
 	multi::Stream* negotiate_lazy(std::iostream&);
-	void negotiate();
+	handler_func negotiate(std::iostream&, std::string&);
+
+	void ls(std::ostream&);
+	void handle(std::iostream&);
 
 private:
 	std::mutex handler_lock;
@@ -81,20 +91,54 @@ private:
 class lazy_srv : public multi::Stream
 {
 public:
-	explicit lazy_srv(std::iostream& _rw) : multi::Stream(), rw(_rw) {};
+	lazy_srv() = default;
+	~lazy_srv() = default;
+
+	explicit lazy_srv(std::iostream& _rw) : multi::Stream(_rw) {};
 
 	static std::once_flag wait_flag;
-	inline static void wait_for_handshake(std::function<void()> f) { std::call_once(lazy_srv::wait_flag, f); };
 
 	int read(bytes&);
 	int write(const bytes&);
 
+};
+
+class lazy_cli : public multi::Stream
+{
+public:
+	lazy_cli() = default;
+	~lazy_cli() = default;
+
+	explicit lazy_cli(std::iostream& _rw, const std::string& _proto) : multi::Stream(_rw), protos({_proto}) {};
+
+	static std::once_flag rflag;
+	static std::once_flag wflag;
+
+	int read(bytes&);
+	int write(const bytes&);
+
+	void do_read_handshake();
+	void do_write_handshake();
+	int do_read_handshake(const bytes&);
+
 private:
-	std::iostream& rw;
+	std::vector<std::string> protos;
 };
 
 
+inline void do_once(std::once_flag& flag, const std::function<void()>& f)
+{
+	std::call_once(flag, f);
+}
+inline std::thread do_once_async(std::once_flag& flag, const std::function<void()>& f)
+{
+	return std::thread([&flag, &f]{do_once(flag, f); });
+}
+
+void delim_write(bytes&, const bytes&);
+inline void delim_write(bytes& buf, const std::string& s) { return delim_write(buf, bytes(s.begin(), s.end())); }
 void delim_write(std::ostream&, const bytes&);
+inline void delim_write(std::ostream& os, const std::string& s) { return delim_write(os, bytes(s.begin(), s.end())); }
 bytes lp_read_buf(std::istream&);
 std::vector<std::string> ls(std::iostream&);
 
@@ -102,4 +146,7 @@ std::string read_next_token(std::iostream&);
 bytes read_next_token_bytes(std::iostream&);
 
 }
+
+inline Stream* NewMultistream(std::iostream& rw, const std::string& proto) { return new stream::lazy_cli(rw, proto); }
+
 }
