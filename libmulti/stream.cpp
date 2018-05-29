@@ -1,5 +1,8 @@
 #include "stream.hpp"
 
+#include <common/varint.hpp>
+#include <common/channel.hpp>
+
 
 namespace multi {
 namespace stream {
@@ -302,5 +305,146 @@ int lazy_srv::write(const bytes& buf)
 	return buf.size();
 }
 
+int lazy_cli::read(bytes& buf)
+{
+	do_once(lazy_cli::wflag, [this]{
+		do_once_async(lazy_cli::wflag, [this]{ this->do_write_handshake(); }).detach();
+		this->do_read_handshake();
+	});
+
+	if(this->rerr != NULL)
+	{
+		Exception e(this->rerr->what());
+		delete this->rerr;
+		throw e;
+	}
+
+	char c;
+	buf.clear();
+	while(this->rw.get(c))
+	{
+		buf.push_back(c);
+	}
+	
+	return buf.size();
 }
+
+void lazy_cli::do_read_handshake()
+{
+	for(auto&& p : this->protos)
+	{
+		std::string tok = read_next_token(this->rw);
+		if(p != tok)
+		{
+			this->rerr = new Exception("protocl mismatch");
+			return;
+		}
+	}
+}
+
+int lazy_cli::do_write_handshake(const bytes& buf)
+{	
+	for(auto&& p : this->protos)
+	{
+		delim_write(this->rw, p);
+	}
+
+	int n = 0;
+	if(buf.size() > 0)
+	{
+		this->rw.write((const char*) buf.data(), buf.size());
+	}
+	return n;
+}
+
+void lazy_cli::do_write_handshake()
+{
+	this->do_write_handshake(bytes());
+}
+
+int lazy_cli::write(const bytes& buf)
+{
+	int n = 0;
+	do_once_async(lazy_cli::wflag, [&]{
+		do_once_async(lazy_cli::rflag, [this]{ this->do_read_handshake(); }).detach();
+		n = this->do_write_handshake(buf);
+	}).detach();
+
+	this->rw.write((const char*) buf.data(), buf.size());
+	return buf.size();
+}
+
+void select_proto_or_fail(const std::string& proto, std::iostream& rw)
+{
+	try
+	{
+		handshake(rw);
+		try_select(proto, rw);
+	} catch(const Exception& e)
+	{
+		throw e;
+	}
+}
+
+std::string select_one_of(const std::vector<std::string>& protos, std::iostream& rw)
+{
+	try
+	{
+		handshake(rw);
+	} catch(const Exception& e)
+	{
+		throw e;
+	}
+
+	
+	for(auto&& p : protos)
+	{
+		try
+		{
+			try_select(p, rw);
+		} catch(const Exception& e)
+		{
+			throw e;
+		}
+		return p;
+	}
+	return "";
+}
+
+
+void handshake(std::iostream& rw)
+{
+	std::string tok = read_next_token(rw);
+	if(tok != proto_id)
+	{
+		throw Exception("mismatch in protocol id");
+	}
+
+	delim_write(rw, proto_id);
+}
+
+void try_select(const std::string& proto, std::iostream& rw)
+{
+	delim_write(rw, proto);
+	std::string tok = read_next_token(rw);
+
+	if(tok == "na"){
+		throw Exception("proto not supported");
+	} else if(tok == proto) {
+		return;
+	} else {
+		throw Exception("unrecognized response");
+	}
+}
+
+}
+
+Stream* NewMSSelect(std::iostream& rw, const std::string& proto)
+{
+	std::vector<std::string> vec({stream::proto_id});
+	vec.push_back(proto);
+	return new stream::lazy_cli(rw, vec);
+}
+
+
 }

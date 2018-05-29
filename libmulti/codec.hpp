@@ -11,6 +11,7 @@
 
 
 #include <common/types.hpp>
+#include <common/varint.hpp>
 
 
 namespace multi {
@@ -200,7 +201,12 @@ enum prefix
 
 inline uint64_t extract_prefix(const bytes& buf) { return uvarint(buf); }
 inline void add_prefix(bytes& buf, prefix codec) { put_uvarint(buf, codec); }
-inline void remove_prefix(bytes& buf) { } // TODO: remove uvarint prefix from buffer
+inline void remove_prefix(bytes& buf)
+{
+	int len;
+	uvarint(buf, &len);
+	buf.erase(buf.begin(), buf.begin() + len);
+}
 
 }
 }

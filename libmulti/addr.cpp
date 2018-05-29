@@ -1,5 +1,9 @@
 #include "addr.hpp"
 
+#include <common/varint.hpp>
+
+#include <boost/algorithm/string.hpp>
+
 namespace multi {
 namespace addr {
 

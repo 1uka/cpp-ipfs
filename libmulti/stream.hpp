@@ -1,8 +1,6 @@
 #pragma once
 
 #include <common/types.hpp>
-#include <common/varint.hpp>
-#include <common/channel.hpp>
 
 #include <iostream>
 #include <thread>
@@ -109,7 +107,15 @@ public:
 	lazy_cli() = default;
 	~lazy_cli() = default;
 
-	explicit lazy_cli(std::iostream& _rw, const std::string& _proto) : multi::Stream(_rw), protos({_proto}) {};
+	explicit lazy_cli(std::iostream& _rw, const std::string& _proto) : multi::Stream(_rw), protos({_proto})
+	{
+		rerr = 0;
+	};
+
+	explicit lazy_cli(std::iostream& _rw, const std::vector<std::string>& _protos) : multi::Stream(_rw), protos(_protos) 
+	{
+		rerr = 0;
+	};
 
 	static std::once_flag rflag;
 	static std::once_flag wflag;
@@ -119,9 +125,10 @@ public:
 
 	void do_read_handshake();
 	void do_write_handshake();
-	int do_read_handshake(const bytes&);
+	int do_write_handshake(const bytes&);
 
 private:
+	Exception* rerr;
 	std::vector<std::string> protos;
 };
 
@@ -145,8 +152,15 @@ std::vector<std::string> ls(std::iostream&);
 std::string read_next_token(std::iostream&);
 bytes read_next_token_bytes(std::iostream&);
 
+void select_proto_or_fail(const std::string&, std::iostream&);
+std::string select_one_of(const std::vector<std::string>&, std::iostream&);
+void handshake(std::iostream&);
+void try_select(const std::string&, std::iostream&);
+
+
 }
 
 inline Stream* NewMultistream(std::iostream& rw, const std::string& proto) { return new stream::lazy_cli(rw, proto); }
+Stream* NewMSSelect(std::iostream&, const std::string&);
 
 }

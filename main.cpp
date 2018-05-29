@@ -1,13 +1,66 @@
-#include <common/types.hpp>
 #include <crypto/key.hpp>
+#include <common/channel.hpp>
 
-#include <libmulti/hash.hpp>
-#include <libmulti/base.hpp>
 #include <libmulti/codec.hpp>
 #include <libmulti/addr.hpp>
 #include <libmulti/stream.hpp>
 #include <iostream>
+#include <chrono>
 
+#include <boost/algorithm/string.hpp>
+
+void test_proto_negotiation()
+{
+	chan_t<int> done;
+	std::stringbuf* buf = new std::stringbuf();
+	std::iostream* rw = new std::iostream(buf);
+	multi::stream::Muxer* mux = new multi::stream::Muxer();
+	mux->add_handler("/a", NULL);
+	mux->add_handler("/b", NULL);
+	mux->add_handler("/c", NULL);
+	std::string ret;
+	std::thread([&]{
+		try
+		{
+			mux->negotiate(*rw, ret);
+		} catch(const Exception& e)
+		{
+			std::cout << e.what() << std::endl;
+			return;
+		}
+		if(ret != "/a")
+		{
+			std::cout << "incorrect proto: " << ret << std::endl;
+		}
+		done.close();
+	}).detach();
+	int sink;
+	try
+	{
+		multi::stream::select_proto_or_fail("/a", *rw);
+	} catch(const Exception& e)
+	{
+		std::cout << e.what() << std::endl;
+		delete buf;
+		delete rw;
+		delete mux;
+		return;
+	}
+
+	if(done.pop_wait_for(sink, std::chrono::seconds(1)) == boost::fibers::channel_op_status::timeout)
+	{
+		std::cout << "negotiation didnt complete in time" << std::endl;
+		delete buf;
+		delete rw;
+		delete mux;
+		return;
+	}
+
+	std::cout << "success!" << std::endl;
+	delete buf;
+	delete rw;
+	delete mux;
+}
 
 /* driver */
 int main()
@@ -90,38 +143,5 @@ int main()
 		std::cout << e.what() << std::endl;
 	}
 
-	std::cout << "Initiating ostream test" << std::endl;
-
-	std::stringbuf* buf = new std::stringbuf();
-	std::iostream* rw = new std::iostream(buf);
-	multi::Stream* ms;
-	multi::stream::Muxer mx;
-	mx.add_handler("na", [](const std::string& s, std::iostream& is) -> void{
-		std::cout << "im handled\n"; 
-	});
-	try
-	{
-		std::string m = "/multistream/1.0.0";
-
-		multi::stream::delim_write(*rw, bytes(m.begin(), m.end()));
-
-		ms = mx.negotiate_lazy(*rw);
-		// std::async([&rw]() -> void {
-		// 	std::string m2 = "handleme";
-		// 	multi::stream::delim_write(*rw, bytes(m2.begin(), m2.end()));
-		// });
-	} catch(const Exception& e)
-	{
-		std::cout << e.what() << std::endl;
-		delete buf;
-		delete rw;
-		rw->clear();
-		return -1;
-	}
-	ms->read(dec);
-	std::cout << "from multistream: " << std::string(dec.begin(), dec.end()) << std::endl;
-	delete buf;
-	delete ms;
-	delete rw;
-	return 0;
+	test_proto_negotiation();
 }

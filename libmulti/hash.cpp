@@ -8,6 +8,13 @@
 
 #include "hash.hpp"
 
+#include <cryptopp/sha.h>
+#include <cryptopp/sha3.h>
+#include <cryptopp/keccak.h>
+#include <cryptopp/blake2.h>
+
+#include <common/varint.hpp>
+
 namespace multi {
 namespace hash {
 
