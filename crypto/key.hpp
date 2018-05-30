@@ -7,6 +7,7 @@
  */
 #pragma once
 
+
 #include <common/types.hpp>
 
 #include <cryptopp/cryptlib.h>
@@ -14,44 +15,53 @@
 #include <cryptopp/oids.h>
 #include <cryptopp/eccrypto.h>
 
+#include "pb/crypto.pb.h"
+
 #define SECP256K1 CryptoPP::ASN1::secp256k1()
 #define ED25519 CryptoPP::ASN1::curve25519()
 
 namespace crypto {
 
-enum KeyType
-{
-	KEY_SECP256K1 = 0,
-	KEY_ED25519,
-	KEY_RSA,
-};
-
-
 class Key
 {
 public:
 	Key() = default;
-	virtual ~Key() = default;
+	virtual ~Key() = 0;
 
-	virtual bytes raw() const;
+	virtual bytes raw() const = 0;
 };
 
 
-class PubKey : virtual public Key
+class PubKey : public Key
 {
 public:
-	virtual bool verify(const bytes&, const bytes&);
+	PubKey() = default;
+	virtual ~PubKey() = 0;
+	
+	virtual bool verify(const bytes&, const bytes&) const = 0;
+	virtual bool verify(const std::string&, const std::string&) const = 0;
 };
 
-class PrivKey : virtual public Key
+class PrivKey : public Key
 {
 public:
-	virtual bytes sign(const bytes&) const;
-	virtual PubKey get_public() const;
+	PrivKey() = default;
+	virtual ~PrivKey() = 0;
+
+	virtual bytes sign(const std::string&) const = 0;
+	virtual bytes sign(const bytes&) const = 0;
+	virtual PubKey* get_public() const = 0;
 };
 
 
-PrivKey GenerateKey(KeyType, int);
+using pubkey_unmarshaller 	= std::function<PubKey(const bytes&)>;
+using privkey_unmarshaller 	= std::function<PrivKey(const bytes&)>;
+
+// std::unordered_map<KeyType, pubkey_unmarshaller> pubkey_unmarshallers;
+// std::unordered_map<KeyType, privkey_unmarshaller> privkey_unmarshallers;
+
+
+PrivKey* GenerateKey(pb::KeyType, int);
 
 
 }

@@ -389,6 +389,10 @@ constexpr Type const blake2s_256(0xb260, 0x20);
  * @return bytes the multihash of the input data
  */
 bytes sum(const bytes& input, const Type& type = sha2_256);
+inline bytes sum(const std::string& input, const Type& type = sha2_256)
+{
+	return sum(std::string(input.begin(), input.end()), type);
+}
 
 
 /**
