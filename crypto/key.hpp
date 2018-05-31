@@ -17,8 +17,6 @@
 
 #include "pb/crypto.pb.h"
 
-#define SECP256K1 CryptoPP::ASN1::secp256k1()
-#define ED25519 CryptoPP::ASN1::curve25519()
 
 namespace crypto {
 
@@ -60,15 +58,13 @@ public:
 	virtual bytes decrypt(const std::string&) const = 0;
 };
 
+PrivKey* GenerateKey(pb::KeyType t, int bits = 0);
 
-using pubkey_unmarshaller 	= std::function<PubKey*(const bytes&)>;
-using privkey_unmarshaller 	= std::function<PrivKey*(const bytes&)>;
+PubKey* unmarshal_pubkey(const bytes&);
+PrivKey* unmarshal_privkey(const bytes&);
 
-// std::unordered_map<KeyType, pubkey_unmarshaller> pubkey_unmarshallers;
-// std::unordered_map<KeyType, privkey_unmarshaller> privkey_unmarshallers;
-
-
-PrivKey* GenerateKey(pb::KeyType, int);
+inline bytes marshal_pubkey(const PubKey* k) { return (k != NULL ? k->raw() : bytes()); }
+inline bytes marshal_privkey(const PrivKey* k) { return (k != NULL ? k->raw() : bytes()); } // TODO: check type
 
 
 }

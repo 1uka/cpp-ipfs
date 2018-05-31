@@ -12,18 +12,13 @@
 #include <boost/algorithm/string.hpp>
 
 
-void test_crypto()
+void test_key_functions(const crypto::PrivKey* k)
 {
-	crypto::PrivKey* pk = crypto::GenerateKey(crypto::pb::RSA, 1024);
-
 	std::string m = "jas sum luka atanasovski";
-	bytes hash(multi::hash::sha1.len());
+	bytes hash(multi::hash::sha2_256.len());
 	CryptoPP::SHA256().CalculateDigest(hash.data(), (const CryptoPP::byte*) m.data(), m.length());
-
-	bytes signature = pk->sign(hash);
-	
-	crypto::PubKey* pub = pk->get_public();
-
+	bytes signature = k->sign(hash);
+	crypto::PubKey* pub = k->get_public();
 	if(pub->verify(hash, signature))
 	{
 		std::cout << "Signature schemes work" << std::endl;
@@ -31,9 +26,8 @@ void test_crypto()
 	{
 		std::cout << "Fixthedamnsignatureschemes" << std::endl;
 	}
-
 	bytes ct = pub->encrypt(m);
-	bytes pt = pk->decrypt(ct);
+	bytes pt = k->decrypt(ct);
 	std::string dec(pt.begin(), pt.end());
 	if(dec == m)
 	{
@@ -42,9 +36,29 @@ void test_crypto()
 	{
 		std::cout << "fix enc/dec" << std::endl;
 	}
-	delete pk;
 	delete pub;
+	std::cout << "KEY TEST DONE" << std::endl;
 }
+
+void test_crypto()
+{
+	crypto::PrivKey* k = crypto::GenerateKey(crypto::pb::KeyType::RSA, 2048);
+	std::cout << "TESTING RSA" << std::endl;
+	test_key_functions(k);
+	delete k;
+
+	k = crypto::GenerateKey(crypto::pb::KeyType::Secp256k1);
+	std::cout << "TESTING SECP256K1" << std::endl;
+	test_key_functions(k);
+	delete k;
+
+	// curve25519 is still not fully supported by crypto++
+	// k = crypto::GenerateKey(crypto::pb::KeyType::Ed25519);
+	// std::cout << "TESTING ED25519" << std::endl;
+	// test_key_functions(k);
+	// delete k;
+}
+
 
 void test_multiaddr()
 {

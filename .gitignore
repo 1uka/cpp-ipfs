@@ -1,4 +1,5 @@
 .vscode/
 obj/
 main.dSYM/
+ios/
 main
