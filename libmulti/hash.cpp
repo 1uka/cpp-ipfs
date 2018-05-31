@@ -25,6 +25,9 @@ bytes sum(const bytes& input, const Type& type)
 
 	switch(type.code())
 	{
+		case ID.code():
+			digest = input;
+			break;
 		case sha1.code():
 			CryptoPP::SHA1().CalculateDigest(digest.data(), input.data(), input.size());
 			break;

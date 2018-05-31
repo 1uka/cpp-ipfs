@@ -7,6 +7,14 @@
 
 namespace crypto {
 
+class RsaPublicKey;
+class RsaPrivateKey;
+
+PrivKey* unmarshal_rsa_privkey(const bytes&);
+bytes marshal_rsa_privkey(const RsaPrivateKey*);
+PubKey* unmarshal_rsa_pubkey(const bytes&);
+bytes marshal_rsa_pubkey(const RsaPublicKey*);
+
 
 class RsaPublicKey : public PubKey
 {
@@ -17,7 +25,7 @@ public:
 	explicit RsaPublicKey(const CryptoPP::RSA::PublicKey& _pk) : m_pk(_pk) {};
 	explicit RsaPublicKey(const CryptoPP::RSA::PrivateKey& _sk) : m_pk(_sk) {};
 
-	inline bytes raw() const { return bytes(); }; // TODO: fo real
+	inline bytes raw() const { return marshal_rsa_pubkey(this); }; // TODO: fo real
 
 	bool verify(const std::string&, const std::string&) const;
 	inline bool verify(const bytes& m, const bytes& s) const
@@ -46,7 +54,7 @@ public:
 	
 	explicit RsaPrivateKey(const CryptoPP::RSA::PrivateKey& _sk) : m_sk(_sk) {};
 	
-	inline bytes raw() const { return bytes(); } // TODO: fo real
+	inline bytes raw() const { return marshal_rsa_privkey(this); } // TODO: fo real
 	inline PubKey* get_public() const { return new RsaPublicKey(m_sk); }
 	
 	bytes sign(const std::string&) const;
@@ -62,12 +70,6 @@ public:
 private:
 	CryptoPP::RSA::PrivateKey m_sk;
 };
-
-PrivKey* unmarshal_rsa_privkey(const bytes&);
-bytes marshal_rsa_privkey(const RsaPrivateKey*);
-
-PubKey* unmarshal_rsa_pubkey(const bytes&);
-bytes marshal_rsa_pubkey(const RsaPublicKey*);
 
 
 }

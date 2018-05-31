@@ -70,18 +70,22 @@ constexpr int8_t mapBase58[256] = {
 
 constexpr char b16alphabet[] = "0123456789abcdef";
 std::string b16_encode(const bytes&);
+inline std::string b16_encode(const std::string& s) { return b16_encode(bytes(s.begin(), s.end())); }
 bytes 			b16_decode(const std::string&);
 
 constexpr char b32alphabet[] = "abcdefghijklmnopqrstuvwxyz234567";
 std::string b32_encode(const bytes&);
+inline std::string b32_encode(const std::string& s) { return b32_encode(bytes(s.begin(), s.end())); }
 bytes       b32_decode(const std::string&);
 
 constexpr char b58alphabet[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 std::string b58btc_encode(const bytes&);
+inline std::string b58btc_encode(const std::string& s) { return b58btc_encode(bytes(s.begin(), s.end())); }
 bytes       b58btc_decode(const std::string&);
 
 constexpr char b64alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 std::string b64_encode(const bytes&);
+inline std::string b64_encode(const std::string& s) { return b64_encode(bytes(s.begin(), s.end())); }
 bytes       b64_decode(const std::string&);
 
 

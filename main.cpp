@@ -6,6 +6,8 @@
 
 #include <crypto/common.hpp>
 
+#include <libp2p/peer_id.hpp>
+
 #include <iostream>
 #include <chrono>
 
@@ -36,6 +38,7 @@ void test_key_functions(const crypto::PrivKey* k)
 	{
 		std::cout << "fix enc/dec" << std::endl;
 	}
+
 	delete pub;
 	std::cout << "KEY TEST DONE" << std::endl;
 }
@@ -57,6 +60,31 @@ void test_crypto()
 	// std::cout << "TESTING ED25519" << std::endl;
 	// test_key_functions(k);
 	// delete k;
+}
+
+
+void test_peerid()
+{
+	crypto::PrivKey* k = crypto::GenerateKey(crypto::pb::KeyType::Secp256k1);
+	crypto::PubKey* pub = k->get_public();
+	libp2p::ID id(k);
+	if(!id.matches_pubkey(pub))
+	{
+		std::cout << "ID does not match public key" << std::endl;
+	}
+	crypto::PubKey* extracted = id.extract_pubkey();
+	if(extracted == NULL)
+	{
+		std::cout << "Failed extracting public key" << std::endl;
+		delete k;
+		return;
+	}
+	std::cout << "Derived from private: " << multi::base::encode(pub->raw()) << std::endl;
+	std::cout << "Extracted form id: " << multi::base::encode(extracted->raw()) << std::endl;
+
+	delete extracted;
+	delete k;
+	delete pub;
 }
 
 
@@ -147,4 +175,5 @@ int main()
 	test_multiaddr();
 	test_proto_negotiation();
 	test_crypto();
+	test_peerid();
 }

@@ -41,7 +41,8 @@ private:
 /**
  * the ones that are commented out are specified in the multihash table,
  * but i dont have their implementation in cpp
- */ 
+ */
+constexpr Type const ID(0x00, -1);
 constexpr Type const sha1(0x11, 20);
 constexpr Type const sha2_256(0x12, 32);
 constexpr Type const sha2_512(0x13, 64);
@@ -406,7 +407,8 @@ public:
 	Decoded() = default;
 	~Decoded() = default;
 
-	explicit Decoded(const bytes& _hash) : m_hash(_hash.begin() + 2, _hash.end()), m_type(_hash[0], _hash[1]) {};
+	explicit Decoded(const bytes& _hash) : m_hash(_hash.begin(), _hash.end()), m_type(_hash[0], _hash[1]) {};
+	explicit Decoded(const std::string& _s) : Decoded(bytes(_s.begin(), _s.end())) {};
 
 	constexpr const bytes& hash() const { return m_hash; };
 	constexpr const Type& type() const { return m_type; };
@@ -419,14 +421,7 @@ private:
 	Type m_type;
 };
 
-
-/**
- * @brief Decode a multihash into a `Decoded` object
- * 
- * @param input the multihash
- * @return Decoded `Decoded` object
- */
-inline Decoded decode(const bytes& input) { return Decoded(input); }
+inline Decoded fromhex_string(const std::string& s) { return Decoded(multi::base::b16_decode(s)); }
 inline Decoded fromb58_string(const std::string& s) { return Decoded(multi::base::b58btc_decode(s)); }
 inline std::string b58_string(const bytes& mh) { return multi::base::b58btc_encode(mh); }
 

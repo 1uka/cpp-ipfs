@@ -17,6 +17,16 @@ namespace crypto {
 using _ecies = CryptoPP::ECIES<ECC_ALGORITHM>;
 using _ecdsa = CryptoPP::ECDSA<CryptoPP::ECP, CryptoPP::SHA256>;
 
+class Secp256k1PublicKey;
+class Secp256k1PrivateKey;
+
+PrivKey* unmarshal_secp256k1_privkey(const bytes&);
+bytes marshal_secp256k1_privkey(const Secp256k1PrivateKey*);
+
+PubKey* unmarshal_secp256k1_pubkey(const bytes&);
+bytes marshal_secp256k1_pubkey(const Secp256k1PublicKey*);
+
+
 class Secp256k1PublicKey : public PubKey
 {
 public:
@@ -28,7 +38,7 @@ public:
 	}
 	explicit Secp256k1PublicKey(const _ecies::PublicKey& _pk) : m_pk(_pk) {};
 
-	inline bytes raw() const { return bytes(); }; // TODO: fo real
+	inline bytes raw() const { return marshal_secp256k1_pubkey(this); }
 
 	bool verify(const std::string&, const std::string&) const;
 	inline bool verify(const bytes& m, const bytes& s) const
@@ -54,7 +64,7 @@ public:
 
 	explicit Secp256k1PrivateKey(const _ecies::PrivateKey& _sk) : m_sk(_sk) {};
 
-	inline bytes raw() const { return bytes(); } // TODO: fo real
+	inline bytes raw() const { return marshal_secp256k1_privkey(this); }
 	inline PubKey* get_public() const { return new Secp256k1PublicKey(m_sk); }
 
 	bytes sign(const std::string&) const;
@@ -69,12 +79,6 @@ private:
 	_ecies::PrivateKey m_sk;
 };
 
-
-PrivKey* unmarshal_secp256k1_privkey(const bytes&);
-bytes marshal_secp256k1_privkey(const Secp256k1PrivateKey*);
-
-PubKey* unmarshal_secp256k1_pubkey(const bytes&);
-bytes marshal_secp256k1_pubkey(const Secp256k1PublicKey*);
 
 
 }
