@@ -15,12 +15,14 @@
 void test_crypto()
 {
 	crypto::PrivKey* pk = crypto::GenerateKey(crypto::pb::RSA, 1024);
+
 	std::string m = "jas sum luka atanasovski";
-	bytes signature = pk->sign(m);
+	bytes hash(multi::hash::sha1.len());
+	CryptoPP::SHA256().CalculateDigest(hash.data(), (const CryptoPP::byte*) m.data(), m.length());
+
+	bytes signature = pk->sign(hash);
 	
 	crypto::PubKey* pub = pk->get_public();
-	bytes hash(multi::hash::sha1.len());
-	CryptoPP::SHA1().CalculateDigest(hash.data(), (const CryptoPP::byte*) m.data(), m.length());
 
 	if(pub->verify(hash, signature))
 	{
@@ -30,6 +32,16 @@ void test_crypto()
 		std::cout << "Fixthedamnsignatureschemes" << std::endl;
 	}
 
+	bytes ct = pub->encrypt(m);
+	bytes pt = pk->decrypt(ct);
+	std::string dec(pt.begin(), pt.end());
+	if(dec == m)
+	{
+		std::cout << "Encrypt/decrypt works" << std::endl;
+	} else
+	{
+		std::cout << "fix enc/dec" << std::endl;
+	}
 	delete pk;
 	delete pub;
 }

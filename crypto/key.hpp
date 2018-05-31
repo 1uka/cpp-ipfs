@@ -22,6 +22,7 @@
 
 namespace crypto {
 
+
 class Key
 {
 public:
@@ -40,6 +41,9 @@ public:
 	
 	virtual bool verify(const bytes&, const bytes&) const = 0;
 	virtual bool verify(const std::string&, const std::string&) const = 0;
+
+	virtual bytes encrypt(const bytes&) const = 0;
+	virtual bytes encrypt(const std::string&) const = 0;
 };
 
 class PrivKey : public Key
@@ -51,11 +55,14 @@ public:
 	virtual bytes sign(const std::string&) const = 0;
 	virtual bytes sign(const bytes&) const = 0;
 	virtual PubKey* get_public() const = 0;
+
+	virtual bytes decrypt(const bytes&) const = 0;
+	virtual bytes decrypt(const std::string&) const = 0;
 };
 
 
-using pubkey_unmarshaller 	= std::function<PubKey(const bytes&)>;
-using privkey_unmarshaller 	= std::function<PrivKey(const bytes&)>;
+using pubkey_unmarshaller 	= std::function<PubKey*(const bytes&)>;
+using privkey_unmarshaller 	= std::function<PrivKey*(const bytes&)>;
 
 // std::unordered_map<KeyType, pubkey_unmarshaller> pubkey_unmarshallers;
 // std::unordered_map<KeyType, privkey_unmarshaller> privkey_unmarshallers;
