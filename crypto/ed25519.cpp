@@ -10,6 +10,21 @@ Ed25519PrivateKey::Ed25519PrivateKey()
 	m_sk.Initialize(rng, ED25519_CURVE);
 }
 
+bytes Ed25519PrivateKey::raw() const
+{
+	bytes ms = marshal_ed25519_privkey(this);
+
+	pb::PrivateKey pbmes;
+	pbmes.set_type(pb::KeyType::Ed25519);
+	pbmes.set_data(&ms[0], ms.size());
+	std::string ser;
+	if(!pbmes.SerializeToString(&ser))
+	{
+		return bytes();
+	}
+
+	return bytes(ser.begin(), ser.end());
+}
 
 bytes Ed25519PrivateKey::sign(const std::string& m) const
 {
@@ -51,6 +66,21 @@ bytes Ed25519PrivateKey::decrypt(const bytes& m) const
 	return bytes(pt.begin(), pt.end());
 }
 
+bytes Ed25519PublicKey::raw() const
+{
+	bytes ms = marshal_ed25519_pubkey(this);
+
+	pb::PrivateKey pbmes;
+	pbmes.set_type(pb::KeyType::Ed25519);
+	pbmes.set_data(&ms[0], ms.size());
+	std::string ser;
+	if(!pbmes.SerializeToString(&ser))
+	{
+		return bytes();
+	}
+
+	return bytes(ser.begin(), ser.end());
+}
 
 bool Ed25519PublicKey::verify(const std::string& m, const std::string& s) const
 {
@@ -92,7 +122,7 @@ bytes marshal_ed25519_privkey(const Ed25519PrivateKey* k)
 {
 	bytes buf(8192);
 	CryptoPP::ArraySink as(&buf[0], buf.size());
-	k->key().DEREncodePrivateKey(as);
+	k->key().DEREncode(as);
 	return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 
@@ -108,7 +138,7 @@ bytes marshal_ed25519_pubkey(const Ed25519PublicKey* k)
 {
 	bytes buf(8192);
 	CryptoPP::ArraySink as(&buf[0], buf.size());
-	k->key().DEREncodePublicKey(as);
+	k->key().DEREncode(as);
 	return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 

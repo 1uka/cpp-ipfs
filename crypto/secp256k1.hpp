@@ -38,7 +38,7 @@ public:
 	}
 	explicit Secp256k1PublicKey(const _ecies::PublicKey& _pk) : m_pk(_pk) {};
 
-	inline bytes raw() const { return marshal_secp256k1_pubkey(this); }
+	bytes raw() const;
 
 	bool verify(const std::string&, const std::string&) const;
 	inline bool verify(const bytes& m, const bytes& s) const
@@ -64,7 +64,7 @@ public:
 
 	explicit Secp256k1PrivateKey(const _ecies::PrivateKey& _sk) : m_sk(_sk) {};
 
-	inline bytes raw() const { return marshal_secp256k1_privkey(this); }
+	bytes raw() const;
 	inline PubKey* get_public() const { return new Secp256k1PublicKey(m_sk); }
 
 	bytes sign(const std::string&) const;

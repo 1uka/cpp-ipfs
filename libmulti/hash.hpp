@@ -42,7 +42,7 @@ private:
  * the ones that are commented out are specified in the multihash table,
  * but i dont have their implementation in cpp
  */
-constexpr Type const ID(0x00, -1);
+constexpr Type const ID(0xff, -1);
 constexpr Type const sha1(0x11, 20);
 constexpr Type const sha2_256(0x12, 32);
 constexpr Type const sha2_512(0x13, 64);
@@ -407,7 +407,7 @@ public:
 	Decoded() = default;
 	~Decoded() = default;
 
-	explicit Decoded(const bytes& _hash) : m_hash(_hash.begin(), _hash.end()), m_type(_hash[0], _hash[1]) {};
+	explicit Decoded(const bytes&);
 	explicit Decoded(const std::string& _s) : Decoded(bytes(_s.begin(), _s.end())) {};
 
 	constexpr const bytes& hash() const { return m_hash; };

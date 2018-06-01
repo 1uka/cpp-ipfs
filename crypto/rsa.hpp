@@ -25,7 +25,7 @@ public:
 	explicit RsaPublicKey(const CryptoPP::RSA::PublicKey& _pk) : m_pk(_pk) {};
 	explicit RsaPublicKey(const CryptoPP::RSA::PrivateKey& _sk) : m_pk(_sk) {};
 
-	inline bytes raw() const { return marshal_rsa_pubkey(this); }; // TODO: fo real
+	bytes raw() const;
 
 	bool verify(const std::string&, const std::string&) const;
 	inline bool verify(const bytes& m, const bytes& s) const
@@ -54,7 +54,7 @@ public:
 	
 	explicit RsaPrivateKey(const CryptoPP::RSA::PrivateKey& _sk) : m_sk(_sk) {};
 	
-	inline bytes raw() const { return marshal_rsa_privkey(this); } // TODO: fo real
+	bytes raw() const;
 	inline PubKey* get_public() const { return new RsaPublicKey(m_sk); }
 	
 	bytes sign(const std::string&) const;

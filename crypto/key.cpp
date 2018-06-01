@@ -1,6 +1,7 @@
 #include "key.hpp"
 #include "common.hpp"
 
+
 namespace crypto {
 
 Key::~Key() {}
@@ -24,39 +25,33 @@ PrivKey* GenerateKey(pb::KeyType t, int bits)
 
 PubKey* unmarshal_pubkey(const bytes& buf)
 {
-	pb::PublicKey* pmes = new pb::PublicKey();
-	if(!pmes->ParseFromArray(&buf[0], buf.size()))
+	pb::PublicKey pmes;
+	if(!pmes.ParseFromString(std::string(buf.begin(), buf.end())))
 	{
-		delete pmes;
 		return NULL;
 	}
-	if(pubkey_unmarshallers.count(pmes->type()))
+	if(pubkey_unmarshallers.count(pmes.type()))
 	{
-		pubkey_unmarshaller um = pubkey_unmarshallers[pmes->type()];
-		const std::string& data = pmes->data();
-		delete pmes;
+		pubkey_unmarshaller um = pubkey_unmarshallers[pmes.type()];
+		std::string data = pmes.data();
 		return um(bytes(data.begin(), data.end()));
 	}
-	delete pmes;
 	return NULL;
 }
 
 PrivKey* unmarshal_privkey(const bytes& buf)
 {
-	pb::PublicKey* pmes = new pb::PublicKey();
-	if(!pmes->ParseFromArray(&buf[0], buf.size()))
+	pb::PublicKey pmes;
+	if(!pmes.ParseFromString(std::string(buf.begin(), buf.end())))
 	{
-		delete pmes;
 		return NULL;
 	}
-	if(pubkey_unmarshallers.count(pmes->type()))
+	if(pubkey_unmarshallers.count(pmes.type()))
 	{
-		privkey_unmarshaller um = privkey_unmarshallers[pmes->type()];
-		const std::string& data = pmes->data();
-		delete pmes;
+		privkey_unmarshaller um = privkey_unmarshallers[pmes.type()];
+		std::string data = pmes.data();
 		return um(bytes(data.begin(), data.end()));
 	}
-	delete pmes;
 	return NULL;
 }
 

@@ -64,7 +64,7 @@ PubKey* unmarshal_pubkey(const bytes&);
 PrivKey* unmarshal_privkey(const bytes&);
 
 inline bytes marshal_pubkey(const PubKey* k) { return (k != NULL ? k->raw() : bytes()); }
-inline bytes marshal_privkey(const PrivKey* k) { return (k != NULL ? k->raw() : bytes()); } // TODO: check type
+inline bytes marshal_privkey(const PrivKey* k) { return (k != NULL ? k->raw() : bytes()); }
 
 
 }

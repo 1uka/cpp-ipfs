@@ -10,6 +10,22 @@ RsaPrivateKey::RsaPrivateKey(unsigned int bits)
 	this->m_sk.GenerateRandomWithKeySize(rng, bits);
 }
 
+bytes RsaPrivateKey::raw() const
+{
+	bytes ms = marshal_rsa_privkey(this);
+
+	pb::PrivateKey pbmes;
+	pbmes.set_type(pb::KeyType::RSA);
+	pbmes.set_data(&ms[0], ms.size());
+	std::string ser;
+	if(!pbmes.SerializeToString(&ser))
+	{
+		return bytes();
+	}
+
+	return bytes(ser.begin(), ser.end());
+}
+
 bytes RsaPrivateKey::sign(const std::string& m) const
 {
 	CryptoPP::AutoSeededRandomPool rng;
@@ -48,6 +64,22 @@ bytes RsaPrivateKey::decrypt(const bytes& m) const
 	pt.resize(res.messageLength);
 
 	return bytes(pt.begin(), pt.end());
+}
+
+bytes RsaPublicKey::raw() const
+{
+	bytes ms = marshal_rsa_pubkey(this);
+
+	pb::PrivateKey pbmes;
+	pbmes.set_type(pb::KeyType::RSA);
+	pbmes.set_data(&ms[0], ms.size());
+	std::string ser;
+	if(!pbmes.SerializeToString(&ser))
+	{
+		return bytes();
+	}
+
+	return bytes(ser.begin(), ser.end());
 }
 
 bool RsaPublicKey::verify(const std::string& m, const std::string& s) const
@@ -90,7 +122,7 @@ bytes marshal_rsa_privkey(const RsaPrivateKey* k)
 {
 	bytes buf(8192);
 	CryptoPP::ArraySink as(&buf[0], buf.size());
-	k->key().DEREncodePrivateKey(as);
+	k->key().DEREncode(as);
 	return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 
@@ -106,7 +138,7 @@ bytes marshal_rsa_pubkey(const RsaPublicKey* k)
 {
 	bytes buf(8192);
 	CryptoPP::ArraySink as(&buf[0], buf.size());
-	k->key().DEREncodePublicKey(as);
+	k->key().DEREncode(as);
 	return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 

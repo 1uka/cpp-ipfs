@@ -26,8 +26,9 @@ bytes sum(const bytes& input, const Type& type)
 	switch(type.code())
 	{
 		case ID.code():
-			digest = input;
-			break;
+			digest = bytes(input);
+			put_uvarint(digest, 0x0000);
+			return digest;
 		case sha1.code():
 			CryptoPP::SHA1().CalculateDigest(digest.data(), input.data(), input.size());
 			break;
@@ -82,6 +83,13 @@ bytes sum(const bytes& input, const Type& type)
 	return digest;
 }
 
+
+Decoded::Decoded(const bytes& _hash) : m_type(_hash[0], _hash[1])
+{
+	int len;
+	uvarint(_hash, &len);
+	m_hash = bytes(_hash.begin() + len, _hash.end());
+}
 
 }
 }

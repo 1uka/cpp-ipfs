@@ -10,6 +10,22 @@ Secp256k1PrivateKey::Secp256k1PrivateKey()
 	m_sk.Initialize(rng, SECP256K1_CURVE);
 }
 
+bytes Secp256k1PrivateKey::raw() const
+{
+	bytes ms = marshal_secp256k1_privkey(this);
+
+	pb::PrivateKey pbmes;
+	pbmes.set_type(pb::KeyType::Secp256k1);
+	pbmes.set_data(&ms[0], ms.size());
+	std::string ser;
+	if(!pbmes.SerializeToString(&ser))
+	{
+		return bytes();
+	}
+
+	return bytes(ser.begin(), ser.end());
+}
+
 
 bytes Secp256k1PrivateKey::sign(const std::string& m) const
 {
@@ -51,6 +67,21 @@ bytes Secp256k1PrivateKey::decrypt(const bytes& m) const
 	return bytes(pt.begin(), pt.end());
 }
 
+bytes Secp256k1PublicKey::raw() const
+{
+	bytes ms = marshal_secp256k1_pubkey(this);
+
+	pb::PublicKey pbmes;
+	pbmes.set_type(pb::KeyType::Secp256k1);
+	pbmes.set_data(&ms[0], ms.size());
+	std::string ser;
+	if(!pbmes.SerializeToString(&ser))
+	{
+		return bytes();
+	}
+
+	return bytes(ser.begin(), ser.end());
+}
 
 bool Secp256k1PublicKey::verify(const std::string& m, const std::string& s) const
 {
@@ -92,14 +123,14 @@ bytes marshal_secp256k1_privkey(const Secp256k1PrivateKey* k)
 {
 	bytes buf(8192);
 	CryptoPP::ArraySink as(&buf[0], buf.size());
-	k->key().DEREncodePrivateKey(as);
+	k->key().DEREncode(as);
 	return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 
 PubKey* unmarshal_secp256k1_pubkey(const bytes& buf)
 {
 	CryptoPP::ArraySource src(&buf[0], buf.size(), true);
-	_ecies::PrivateKey pk;
+	_ecies::PublicKey pk;
 	pk.BERDecode(src);
 	return new Secp256k1PublicKey(pk);
 }
@@ -108,7 +139,7 @@ bytes marshal_secp256k1_pubkey(const Secp256k1PublicKey* k)
 {
 	bytes buf(8192);
 	CryptoPP::ArraySink as(&buf[0], buf.size());
-	k->key().DEREncodePublicKey(as);
+	k->key().DEREncode(as);
 	return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 

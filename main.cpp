@@ -39,6 +39,14 @@ void test_key_functions(const crypto::PrivKey* k)
 		std::cout << "fix enc/dec" << std::endl;
 	}
 
+	// crypto::PrivKey* unm = crypto::unmarshal_privkey(k->raw());
+	// if(unm == NULL || unm->raw() != k->raw())
+	// {
+	// 	std::cout << "unmarshaling does not work" << std::endl;
+	// }
+
+	// if(unm != NULL) delete unm;
+
 	delete pub;
 	std::cout << "KEY TEST DONE" << std::endl;
 }
@@ -67,6 +75,7 @@ void test_peerid()
 {
 	crypto::PrivKey* k = crypto::GenerateKey(crypto::pb::KeyType::Secp256k1);
 	crypto::PubKey* pub = k->get_public();
+
 	libp2p::ID id(k);
 	if(!id.matches_pubkey(pub))
 	{
@@ -76,15 +85,16 @@ void test_peerid()
 	if(extracted == NULL)
 	{
 		std::cout << "Failed extracting public key" << std::endl;
+		delete pub;
 		delete k;
 		return;
 	}
 	std::cout << "Derived from private: " << multi::base::encode(pub->raw()) << std::endl;
 	std::cout << "Extracted form id: " << multi::base::encode(extracted->raw()) << std::endl;
 
+	delete pub;
 	delete extracted;
 	delete k;
-	delete pub;
 }
 
 

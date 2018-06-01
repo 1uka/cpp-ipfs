@@ -28,7 +28,7 @@ public:
 	}
 	explicit Ed25519PublicKey(const _ecies::PublicKey& _pk) : m_pk(_pk) {};
 
-	inline bytes raw() const { return bytes(); }; // TODO: fo real
+	bytes raw() const;
 
 	bool verify(const std::string&, const std::string&) const;
 	inline bool verify(const bytes& m, const bytes& s) const
@@ -54,7 +54,7 @@ public:
 
 	explicit Ed25519PrivateKey(const _ecies::PrivateKey& _sk) : m_sk(_sk) {};
 
-	inline bytes raw() const { return bytes(); } // TODO: fo real
+	bytes raw() const;
 	inline PubKey* get_public() const { return new Ed25519PublicKey(m_sk); }
 
 	bytes sign(const std::string&) const;
@@ -71,7 +71,7 @@ private:
 
 
 PrivKey* unmarshal_ed25519_privkey(const bytes&);
-bytes marshal_Ed25519_privkey(const Ed25519PrivateKey*);
+bytes marshal_ed25519_privkey(const Ed25519PrivateKey*);
 
 PubKey* unmarshal_ed25519_pubkey(const bytes&);
 bytes marshal_ed25519_pubkey(const Ed25519PublicKey*);

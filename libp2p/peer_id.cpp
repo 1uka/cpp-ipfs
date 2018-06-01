@@ -5,28 +5,39 @@
 
 namespace libp2p {
 
-
-ID::ID(const crypto::PubKey* pub)
+std::string pubkey_to_idstr(const crypto::PubKey* pub)
 {
 	bytes b = pub->raw();
-	delete pub;
 	bytes hash;
-	hash = multi::hash::sum(b);
-	// if(b.size() < MAX_INLINE_KEY_LEN)
-	// {
-	// } else
-	// {
-	// 	hash = multi::hash::sum(b, multi::hash::ID);
-	// } FIXME: this should be somewhat different
+	if(b.size() < MAX_INLINE_KEY_LEN)
+	{
+		hash = multi::hash::sum(b);
+	} else
+	{
+		hash = multi::hash::sum(b, multi::hash::ID);
+	}
 
-	m_str = std::string(hash.begin(), hash.end());
+	return std::string(hash.begin(), hash.end());
+}
+
+ID::ID(const crypto::PrivKey* _k)
+{
+	const crypto::PubKey* pub = _k->get_public();
+	m_str = pubkey_to_idstr(pub);
+	delete pub;
 }
 
 
 crypto::PubKey* ID::extract_pubkey() const
 {
-	crypto::PubKey* pk = crypto::unmarshal_pubkey(multi::hash::Decoded(m_str).hash());
-	return pk;
+	try
+	{
+		crypto::PubKey* pk = crypto::unmarshal_pubkey(multi::hash::Decoded(m_str).hash());
+		return pk;
+	} catch(CryptoPP::BERDecodeErr& e)
+	{
+		return NULL;
+	}
 }
 
 bool ID::matches_pubkey(const crypto::PubKey* pk)

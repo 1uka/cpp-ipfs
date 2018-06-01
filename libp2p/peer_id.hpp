@@ -10,14 +10,19 @@ namespace libp2p {
 #define MAX_INLINE_KEY_LEN 42
 
 struct ID;
+
 std::string idb58_encode(const ID&);
+std::string pubkey_to_idstr(const crypto::PubKey*);
 
 struct ID
 {
+	ID() = default;
+	~ID() = default;
+
 	ID(const std::string& _s) : m_str(_s) {};
 	ID(const bytes& _b) : m_str(_b.begin(), _b.end()) {};
-	ID(const crypto::PubKey*);
-	ID(const crypto::PrivKey* k) : ID(k->get_public()) {}; 
+	ID(const crypto::PubKey* _pub) : m_str(pubkey_to_idstr(_pub)) {};
+	ID(const crypto::PrivKey*);
 
 	inline std::string pretty() const { return idb58_encode(*this); }
 
