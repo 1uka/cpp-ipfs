@@ -103,8 +103,7 @@ static const std::array<protocol, 12> protocols = {
 	protocol(P_QUIC, 0, "quic", false),
 	protocol(P_HTTP, 0, "http", false),
 	protocol(P_HTTPS, 0, "https", false)
-}; 
-// TODO: FIX THE WEIRD SHIT HERE THIS CAUSES SEGFAULT FOR NO OBVIOUS REASON!!
+};
 
 int size_for_addr(const protocol&, const bytes&);
 protocol proto_with_name(const std::string&);
@@ -143,12 +142,12 @@ public:
 	inline Addr encapsulate(const std::string& s) { return this->encapsulate(Addr(s)); };
 	inline Addr decapsulate(const std::string& s) { return this->decapsulate(Addr(s)); };
 
+	std::vector<Addr> split() const;
+
 private:
 	bytes m_raw;
 	std::string m_string;
 };
-
-std::vector<Addr> split(const Addr&);
 
 
 }

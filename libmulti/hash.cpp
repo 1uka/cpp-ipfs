@@ -88,6 +88,10 @@ Decoded::Decoded(const bytes& _hash) : m_type(_hash[0], _hash[1])
 {
 	int len;
 	uvarint(_hash, &len);
+	if(len > 10)
+	{
+		len = 2;
+	}
 	m_hash = bytes(_hash.begin() + len, _hash.end());
 }
 

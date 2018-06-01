@@ -34,6 +34,7 @@ struct ID
 	inline void operator=(const ID& r) { m_str = r.m_str; }
 	inline void operator=(const std::string& r) { m_str = r; }
 
+	friend inline bool operator<(const ID& l, const ID& r) { return l.m_str < r.m_str; }
 	std::string m_str;
 };
 
@@ -41,6 +42,25 @@ inline std::string idb58_encode(const ID& id) { return multi::base::b58btc_encod
 inline ID idb58_decode(const std::string& s) { return ID(multi::hash::fromb58_string(s).hash()); }
 inline std::string idhex_encode(const ID& id) { return multi::base::b16_encode(id.m_str); }
 inline ID idhex_decode(const std::string& s) { return ID(multi::hash::fromhex_string(s).hash()); }
+
+
+struct PeerSet final
+{
+	PeerSet() = default;
+	~PeerSet() = default;
+	
+	explicit PeerSet(unsigned int _cap) : m_cap(_cap) {};
+
+	void add(const ID&);
+	bool try_add(const ID&);
+	bool contains(const ID&);
+	size_t size();
+	std::vector<ID> peers();
+
+	std::set<ID> m_set;
+	std::mutex set_lock;
+	int m_cap;
+};
 
 
 }

@@ -6,7 +6,7 @@
 
 #include <crypto/common.hpp>
 
-#include <libp2p/peer_id.hpp>
+#include <libp2p/peerstore.hpp>
 
 #include <iostream>
 #include <chrono>
@@ -97,17 +97,43 @@ void test_peerid()
 	delete k;
 }
 
+void test_peerinfo()
+{
+	std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+	multi::Addr* ma = new multi::Addr(addr);
+	
+	libp2p::PeerInfo* pi;
+	try
+	{
+		pi = new libp2p::PeerInfo(*ma);
+	} catch(Exception& e)
+	{
+		std::cout << e.what() << std::endl;
+		delete ma;
+		return;
+	}
+	delete ma;
+	delete pi;
+}
+
 
 void test_multiaddr()
 {
 	try
 	{
-		// std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
-		std::string addr = "/ip4/0.0.0.0/tcp/1221";
+		std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+		// std::string addr = "/ip4/0.0.0.0/tcp/1221";
 		multi::Addr* ma = new multi::Addr(addr);
+		std::vector<multi::addr::protocol> protos = ma->protocols();
+		std::cout << "Protocols: " << std::endl;
+		for(auto&& p : protos)
+		{
+			std::cout << p.m_name << std::endl;
+		}
 		std::cout << "To string: " << ma->string() << std::endl;
-		std::cout << "Value for ip4: " << ma->value_for_proto(multi::addr::protocodes::P_IP4) << std::endl;
-		std::cout << "Value for tcp: " << ma->value_for_proto(multi::addr::protocodes::P_TCP) << std::endl;
+		// std::cout << "Value for ip4: " << ma->value_for_proto(multi::addr::protocodes::P_IP4) << std::endl;
+		// std::cout << "Value for tcp: " << ma->value_for_proto(multi::addr::protocodes::P_TCP) << std::endl;
+		std::cout << "Value for ipfs: " << ma->value_for_proto(multi::addr::protocodes::P_IPFS) << std::endl;
 		multi::Addr* ma2 = new multi::Addr(addr);
 		if(*ma == *ma2)
 		{
@@ -186,4 +212,5 @@ int main()
 	test_proto_negotiation();
 	test_crypto();
 	test_peerid();
+	test_peerinfo();
 }

@@ -234,8 +234,15 @@ std::vector<bytes> bytes_split(bytes b)
 		size = size_for_addr(p, b);
 		
 		len += size;
-		ret.push_back(bytes(b.begin(), b.begin() + len));
-		b.erase(b.begin(), b.begin() + len);
+		if(b.size() <= len)
+		{
+			ret.push_back(bytes(b.begin(), b.end()));
+			return ret;
+		} else
+		{
+			ret.push_back(bytes(b.begin(), b.begin() + len));
+			b.erase(b.begin(), b.begin() + len);
+		}
 	}
 	
 	return ret;
@@ -244,12 +251,13 @@ std::vector<bytes> bytes_split(bytes b)
 
 }
 
-std::vector<Addr> split(const Addr& ma)
+std::vector<Addr> Addr::split() const
 {
 	std::vector<bytes> bs;
 	try
 	{
-		bs = addr::bytes_split(ma.raw());
+		bytes raw = this->raw();
+		bs = addr::bytes_split(raw);
 	} catch(const Exception& e)
 	{
 		throw e;
@@ -270,7 +278,7 @@ std::vector<addr::protocol> Addr::protocols() const
 {
 	std::vector<addr::protocol> protos;
 	bytes buf = this->m_raw;
-	while(buf.size() > 0)
+	while(buf.size() > 1)
 	{
 		int code, len, size;
 		code = varint(buf, &len);
@@ -293,7 +301,7 @@ std::vector<addr::protocol> Addr::protocols() const
 
 std::string Addr::value_for_proto(const int& code) const
 {
-	for(auto&& sub : split(*this))
+	for(auto&& sub : this->split())
 	{
 		if(sub.string() == "") continue;
 		addr::protocol p = sub.protocols()[0];

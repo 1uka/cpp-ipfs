@@ -1,4 +1,4 @@
-#include "peer_id.hpp"
+#include "peer.hpp"
 
 #include <libmulti/hash.hpp>
 
@@ -44,6 +44,54 @@ bool ID::matches_pubkey(const crypto::PubKey* pk)
 {
 	ID oid(pk);
 	return oid.m_str == this->m_str;
+}
+
+
+void PeerSet::add(const ID& id)
+{
+	set_lock.lock();
+	m_set.insert(id);
+	set_lock.unlock();
+}
+
+bool PeerSet::try_add(const ID& id)
+{
+	set_lock.lock();
+	if(m_set.size() >= m_cap && m_set.count(id))
+	{
+		return false;
+	}
+	m_set.insert(id);
+	return true;
+}
+
+bool PeerSet::contains(const ID& id)
+{
+	set_lock.lock();
+	bool _containts = m_set.count(id) > 0;
+	set_lock.unlock();
+	return _containts;
+}
+
+size_t PeerSet::size()
+{
+	set_lock.lock();
+	size_t _size = m_set.size();
+	set_lock.unlock();
+	return _size;
+}
+
+std::vector<ID> PeerSet::peers()
+{
+	set_lock.lock();
+	std::vector<ID> ret(m_set.size());
+	
+	for(auto&& id : m_set)
+	{
+		ret.push_back(id);
+	}
+	set_lock.unlock();
+	return ret;
 }
 
 }
