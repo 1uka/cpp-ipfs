@@ -113,13 +113,10 @@ void test_peerinfo()
 		{
 			std::cout << a.string() << std::endl;
 		}
-		
-		crypto::PubKey* pk = pi->m_id.extract_pubkey();
-		if(pk != NULL)
-		{
-			std::cout << "Extracted pubkey: " << multi::base::encode(pk->raw()) << std::endl;
-			delete pk;
-		}
+		std::string marsh = pi->marshal_json();
+		std::cout << "Marshaled: " << marsh << std::endl;
+		pi->unmarshal_json(marsh);
+		std::cout << "PeerInfo (unmarshalled) id:" << pi->m_id.pretty() << std::endl;
 	} catch(Exception& e)
 	{
 		std::cout << e.what() << std::endl;

@@ -36,12 +36,15 @@ class PubKey : public Key
 public:
 	PubKey() = default;
 	virtual ~PubKey() = 0;
+
+	virtual PubKey* clone() const = 0;
 	
 	virtual bool verify(const bytes&, const bytes&) const = 0;
 	virtual bool verify(const std::string&, const std::string&) const = 0;
 
 	virtual bytes encrypt(const bytes&) const = 0;
 	virtual bytes encrypt(const std::string&) const = 0;
+
 };
 
 class PrivKey : public Key
@@ -49,6 +52,8 @@ class PrivKey : public Key
 public:
 	PrivKey() = default;
 	virtual ~PrivKey() = 0;
+
+	virtual PrivKey* clone() const = 0;
 
 	virtual bytes sign(const std::string&) const = 0;
 	virtual bytes sign(const bytes&) const = 0;

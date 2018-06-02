@@ -26,8 +26,8 @@ struct ID
 
 	inline std::string pretty() const { return idb58_encode(*this); }
 
-	bool matches_pubkey(const crypto::PubKey*);
-	inline bool matches_privkey(const crypto::PrivKey* k) { return matches_pubkey(k->get_public()); }
+	bool matches_pubkey(const crypto::PubKey*) const;
+	inline bool matches_privkey(const crypto::PrivKey* k) const { return matches_pubkey(k->get_public()); }
 
 	crypto::PubKey* extract_pubkey() const;
 
@@ -35,6 +35,8 @@ struct ID
 	inline void operator=(const std::string& r) { m_str = r; }
 
 	friend inline bool operator<(const ID& l, const ID& r) { return l.m_str < r.m_str; }
+	friend inline bool operator==(const ID& l, const ID& r) { return l.m_str == r.m_str; }
+
 	std::string m_str;
 };
 

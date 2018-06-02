@@ -40,7 +40,7 @@ crypto::PubKey* ID::extract_pubkey() const
 	}
 }
 
-bool ID::matches_pubkey(const crypto::PubKey* pk)
+bool ID::matches_pubkey(const crypto::PubKey* pk) const
 {
 	ID oid(pk);
 	return oid.m_str == this->m_str;

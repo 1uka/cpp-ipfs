@@ -25,6 +25,7 @@ public:
 	explicit RsaPublicKey(const CryptoPP::RSA::PublicKey& _pk) : m_pk(_pk) {};
 	explicit RsaPublicKey(const CryptoPP::RSA::PrivateKey& _sk) : m_pk(_sk) {};
 
+	inline PubKey* clone() const { return new RsaPublicKey(*this); }
 	bytes raw() const;
 
 	bool verify(const std::string&, const std::string&) const;
@@ -54,6 +55,7 @@ public:
 	
 	explicit RsaPrivateKey(const CryptoPP::RSA::PrivateKey& _sk) : m_sk(_sk) {};
 	
+	inline PrivKey* clone() const { return new RsaPrivateKey(*this); }
 	bytes raw() const;
 	inline PubKey* get_public() const { return new RsaPublicKey(m_sk); }
 	
