@@ -17,7 +17,7 @@ struct PeerInfo
 
 	explicit PeerInfo(const multi::Addr&);
 
-	std::vector<multi::Addr> to_p2p_addrs();
+	std::vector<multi::Addr> p2p_addrs();
 
 	ID m_id;
 	std::vector<multi::Addr> m_addrs;

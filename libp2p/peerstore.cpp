@@ -13,7 +13,7 @@ PeerInfo::PeerInfo(const multi::Addr& _maddr)
 	{
 		throw INVALID_MADDR;
 	}
-
+	
 	multi::Addr ipfs_part = parts.back();
 	if(ipfs_part.protocols()[0].m_code != multi::addr::P_IPFS)
 	{
@@ -36,7 +36,7 @@ PeerInfo::PeerInfo(const multi::Addr& _maddr)
 	}
 }
 
-std::vector<multi::Addr> PeerInfo::to_p2p_addrs()
+std::vector<multi::Addr> PeerInfo::p2p_addrs()
 {
 	std::vector<multi::Addr> ret;
 	std::string tpl = "/" + multi::addr::proto_with_code(multi::addr::P_IPFS).m_name + "/";

@@ -132,6 +132,7 @@ public:
 	friend inline bool operator==(const Addr& l, const Addr& r) { return l.string().compare(r.string()) == 0; }
 
 	inline std::string string() const { return m_string; };
+	inline void set_string(const bytes& b) { m_string = addr::bytes2string(b); }
 	inline bytes raw() const { return m_raw; };
 
 	std::vector<addr::protocol> protocols() const;

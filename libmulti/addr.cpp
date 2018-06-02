@@ -63,9 +63,9 @@ bytes ipfss2b(const std::string& s)
 {
 	try
 	{
-		multi::hash::Decoded mh = multi::hash::fromb58_string(s);
-		bytes b(mh.hash().begin(), mh.hash().end());
-		put_uvarint(b, mh.len());
+		bytes _hash = multi::base::b58btc_decode(s);
+		bytes b(_hash.begin() + 2, _hash.end());
+		put_uvarint(b, b.size());
 		return b;
 	} catch(const Exception& e)
 	{
@@ -82,7 +82,7 @@ std::string ipfsb2s(const bytes& b)
 	if(hash.size() != size) { throw Exception("inconsistent lengths"); }
 	put_uvarint(hash, multi::hash::sha2_256.len());
 	put_uvarint(hash, multi::hash::sha2_256.code());
-	return multi::hash::b58_string(hash);
+	return multi::base::b58btc_encode(hash);
 }
 
 
@@ -199,7 +199,6 @@ std::string bytes2string(bytes b)
 			throw Exception("failed to parse " + p.m_name);
 		}
 	}
-
 	return s;
 }
 
@@ -232,7 +231,6 @@ std::vector<bytes> bytes_split(bytes b)
 		}
 
 		size = size_for_addr(p, b);
-		
 		len += size;
 		if(b.size() <= len)
 		{
@@ -262,7 +260,6 @@ std::vector<Addr> Addr::split() const
 	{
 		throw e;
 	}
-
 	std::vector<Addr> addrs(bs.size());
 	
 	for(auto&& a : bs)
@@ -301,7 +298,8 @@ std::vector<addr::protocol> Addr::protocols() const
 
 std::string Addr::value_for_proto(const int& code) const
 {
-	for(auto&& sub : this->split())
+	std::vector<Addr> addrs = this->split();
+	for(auto&& sub : addrs)
 	{
 		if(sub.string() == "") continue;
 		addr::protocol p = sub.protocols()[0];

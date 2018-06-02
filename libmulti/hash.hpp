@@ -26,6 +26,8 @@ namespace hash {
 class Type final
 {
 public:
+	Type() = default;
+	~Type() = default;
 
 	constexpr explicit Type(unsigned short _code, unsigned short _len) : m_code(_code), m_len(_len) {};
 
@@ -421,9 +423,6 @@ private:
 	Type m_type;
 };
 
-inline Decoded fromhex_string(const std::string& s) { return Decoded(multi::base::b16_decode(s)); }
-inline Decoded fromb58_string(const std::string& s) { return Decoded(multi::base::b58btc_decode(s)); }
-inline std::string b58_string(const bytes& mh) { return multi::base::b58btc_encode(mh); }
 
 }  
 }

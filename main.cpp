@@ -99,13 +99,27 @@ void test_peerid()
 
 void test_peerinfo()
 {
-	std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
+	std::string addr = "/ip4/0.0.0.0/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
 	multi::Addr* ma = new multi::Addr(addr);
 	
 	libp2p::PeerInfo* pi;
 	try
 	{
 		pi = new libp2p::PeerInfo(*ma);
+		std::cout << "PeerInfo id:" << pi->m_id.pretty() << std::endl;
+		std::vector<multi::Addr> p2paddrs = pi->p2p_addrs();
+		std::cout << "P2P Addrs: " << std::endl;
+		for(auto&& a : p2paddrs)
+		{
+			std::cout << a.string() << std::endl;
+		}
+		
+		crypto::PubKey* pk = pi->m_id.extract_pubkey();
+		if(pk != NULL)
+		{
+			std::cout << "Extracted pubkey: " << multi::base::encode(pk->raw()) << std::endl;
+			delete pk;
+		}
 	} catch(Exception& e)
 	{
 		std::cout << e.what() << std::endl;
@@ -121,18 +135,16 @@ void test_multiaddr()
 {
 	try
 	{
-		std::string addr = "/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
-		// std::string addr = "/ip4/0.0.0.0/tcp/1221";
+		std::string addr = "/ip4/0.0.0.0/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG";
 		multi::Addr* ma = new multi::Addr(addr);
 		std::vector<multi::addr::protocol> protos = ma->protocols();
+		std::cout << "To string: " << ma->string() << std::endl;
 		std::cout << "Protocols: " << std::endl;
 		for(auto&& p : protos)
 		{
 			std::cout << p.m_name << std::endl;
 		}
-		std::cout << "To string: " << ma->string() << std::endl;
-		// std::cout << "Value for ip4: " << ma->value_for_proto(multi::addr::protocodes::P_IP4) << std::endl;
-		// std::cout << "Value for tcp: " << ma->value_for_proto(multi::addr::protocodes::P_TCP) << std::endl;
+		std::cout << "Value for ip4: " << ma->value_for_proto(multi::addr::protocodes::P_IP4) << std::endl;
 		std::cout << "Value for ipfs: " << ma->value_for_proto(multi::addr::protocodes::P_IPFS) << std::endl;
 		multi::Addr* ma2 = new multi::Addr(addr);
 		if(*ma == *ma2)
@@ -142,7 +154,7 @@ void test_multiaddr()
 			std::cout << "MA: " << ma->string() << std::endl;
 			std::cout << "MA2: " << ma2->string() << std::endl;
 		}
-		multi::Addr decaps = ma->decapsulate("/tcp/1221");
+		multi::Addr decaps = ma->decapsulate("/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG");
 		std::cout << "Decapsulated: " << decaps.string() << std::endl;
 		delete ma2;
 		delete ma;

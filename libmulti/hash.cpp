@@ -84,8 +84,12 @@ bytes sum(const bytes& input, const Type& type)
 }
 
 
-Decoded::Decoded(const bytes& _hash) : m_type(_hash[0], _hash[1])
+Decoded::Decoded(const bytes& _hash)
 {
+	if(_hash.size() < 2)
+	{
+		return;
+	}
 	int len;
 	uvarint(_hash, &len);
 	if(len > 10)
@@ -93,6 +97,7 @@ Decoded::Decoded(const bytes& _hash) : m_type(_hash[0], _hash[1])
 		len = 2;
 	}
 	m_hash = bytes(_hash.begin() + len, _hash.end());
+	m_type = Type(_hash[0], _hash[1]);
 }
 
 }
