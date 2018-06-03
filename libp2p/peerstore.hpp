@@ -6,6 +6,7 @@
 #include <chrono>
 
 #include <libmulti/addr.hpp>
+#include <common/channel.hpp>
 
 
 namespace libp2p {
@@ -62,6 +63,61 @@ public:
 };
 
 
+class Peerstore : public KeyBook, public AddrBook
+{
+public:
+	Peerstore() = default;
+	virtual ~Peerstore() = 0;
+
+	virtual std::vector<ID> peers() = 0;
+	virtual PeerInfo peer_info(const ID&) = 0;
+
+	virtual void* get(const ID&, const std::string&) = 0;
+	virtual void put(const ID&, const std::string&, const void*) = 0;
+
+	virtual std::vector<std::string> get_protocols(const ID&) = 0;
+	virtual void add_protocols(const ID&, const std::vector<std::string>&) = 0;
+	virtual void set_protocols(const ID&, const std::vector<std::string>&) = 0;
+	virtual std::vector<std::string> supports_protocols(const ID&, const std::vector<std::string>&) = 0;
+};
+
+
+#define TEMP_ADDR_TTL 	std::chrono::seconds(10)
+#define PROV_ADDR_TTL 	std::chrono::minutes(10)
+#define RECENT_CONN_TTL std::chrono::minutes(10)
+#define OWN_ADDR_TTL		std::chrono::minutes(10)
+
+#define PERMA_ADDR_TTL 		((int) (1 << 63) - 1)
+#define CONNECTED_ADDR_TTL PERMA_ADDR_TTL-1
+
+
+
+struct expiring_addr
+{
+	multi::Addr addr;
+	std::chrono::duration<int64_t> ttl;
+	std::time_t expires;
+};
+
+typedef std::vector<expiring_addr> addr_slice;
+
+struct addr_sub
+{
+	chan_t<multi::Addr> pubch;
+	std::mutex lk;
+	std::vector<multi::Addr> buffer;
+};
+
+class AddrManager : public AddrBook
+{
+public:
+private:
+	std::mutex addrmu;
+
+};
+
+
+
 class _key_book : public KeyBook
 {
 public:
@@ -81,6 +137,40 @@ private:
 	std::unordered_map<ID, crypto::PrivKey*> m_sks;
 	std::mutex m_lock;
 };
+
+
+
+class _peerstore : public _key_book
+{
+public:
+	_peerstore() = default;
+	~_peerstore();
+
+	std::vector<ID> peers();
+	PeerInfo peer_info(const ID&);
+
+	void* get(const ID&, const std::string&);
+	void put(const ID&, const std::string&, void*);
+
+	std::vector<std::string> get_protocols(const ID&);
+	void add_protocols(const ID&, const std::vector<std::string>&);
+	void set_protocols(const ID&, const std::vector<std::string>&);
+	std::vector<std::string> supports_protocols(const ID&, const std::vector<std::string>&);
+
+private:
+	std::unordered_map<std::string, void*> m_ds;
+	std::mutex ds_lock;
+	std::mutex proto_lock;
+
+	inline std::set<std::string>* __get_proto_set(const ID& id)
+	{
+		return static_cast<std::set<std::string>*>(this->get(id, "protocols"));
+	}
+};
+
+
+std::vector<PeerInfo> peer_infos(Peerstore*, const std::vector<ID>&);
+std::vector<ID> peerinfo_ids(const std::vector<PeerInfo>&);
 
 
 }

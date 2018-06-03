@@ -66,3 +66,16 @@ struct PeerSet final
 
 
 }
+
+namespace std {
+
+template<>
+struct hash<libp2p::ID>
+{
+	inline std::size_t operator()(const libp2p::ID& id) const
+	{
+		return std::hash<std::string>()(id.m_str);
+	}
+};
+
+}

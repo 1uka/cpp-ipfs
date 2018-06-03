@@ -79,6 +79,10 @@ void PeerInfo::unmarshal_json(const std::string& j_string)
 }
 
 
+AddrBook::~AddrBook() {}
+KeyBook::~KeyBook() {}
+Peerstore::~Peerstore() {}
+
 _key_book::~_key_book()
 {
 	for(auto&& pk : m_pks)
@@ -164,6 +168,142 @@ void _key_book::add_privkey(const ID& id, const crypto::PrivKey* sk)
 	m_lock.lock();
 	m_sks[id] = sk->clone();
 	m_lock.unlock();
+}
+
+
+
+_peerstore::~_peerstore()
+{
+	for(auto&& kv : m_ds)
+	{
+		delete kv.second;
+	}
+}
+
+std::vector<ID> _peerstore::peers()
+{
+	PeerSet ps;
+	
+	for(auto&& p : _key_book::peers())
+	{
+		ps.add(p);
+	}
+	
+	return std::vector<ID>(ps.m_set.begin(), ps.m_set.end());
+}
+
+PeerInfo _peerstore::peer_info(const ID& id)
+{
+	// TODO: after addr_manager is implemented
+}
+
+
+void* _peerstore::get(const ID& id, const std::string& key)
+{
+	proto_lock.lock();
+	void* ret = NULL;
+	if(m_ds.count(id.m_str + "/" + key) > 0)
+	{
+		ret = m_ds[id.m_str + "/" + key];
+	}
+	proto_lock.unlock();
+	return ret;
+}
+
+void _peerstore::put(const ID& id, const std::string& key, void* val)
+{
+	proto_lock.lock();
+	m_ds[id.m_str + "/" + key] = val;
+	proto_lock.unlock();
+}
+
+
+std::vector<std::string> _peerstore::get_protocols(const ID& id)
+{
+	proto_lock.lock();
+	std::set<std::string>* pset = __get_proto_set(id);
+	std::vector<std::string> ret;
+	if(pset != NULL)
+	{
+		for(auto&& k : *pset)
+		{
+			ret.push_back(k);
+		}
+	}
+	proto_lock.unlock();
+	return ret;
+}
+
+void _peerstore::add_protocols(const ID& id, const std::vector<std::string>& protos)
+{
+	proto_lock.lock();
+	std::set<std::string>* pset = __get_proto_set(id);
+	if(pset == NULL)
+	{
+		pset = new std::set<std::string>(); // TODO: this might cause mem leak if not cleared
+	}
+
+	for(auto&& p : protos)
+	{
+		pset->insert(p);
+	}
+	this->put(id, "protocols", pset);
+	proto_lock.unlock();
+}
+
+void _peerstore::set_protocols(const ID& id, const std::vector<std::string>& protos)
+{
+	proto_lock.lock();
+	std::set<std::string>* pset = new std::set<std::string>(); // TODO: this might cause mem leak if not cleared
+	for(auto&& p : protos)
+	{
+		pset->insert(p);
+	}
+	this->put(id, "protocols", pset);
+	proto_lock.unlock();
+}
+
+std::vector<std::string> _peerstore::supports_protocols(const ID& id, const std::vector<std::string>& protos)
+{
+	proto_lock.lock();
+	std::vector<std::string> ret;
+	std::set<std::string>* pset = __get_proto_set(id);
+	if(pset == NULL)
+	{
+		proto_lock.unlock();
+		return ret;
+	}
+
+	for(auto&& p : protos)
+	{
+		if(pset->count(p) > 0)
+		{
+			ret.push_back(p);
+		}
+	}
+
+	proto_lock.unlock();
+	return ret;
+}
+
+std::vector<PeerInfo> peer_infos(Peerstore* ps, const std::vector<ID>& ids)
+{
+	std::vector<PeerInfo> ret;
+	for(auto&& id : ids)
+	{
+		ret.push_back(ps->peer_info(id));
+	}
+	return ret;
+}
+
+std::vector<ID> peerinfo_ids(const std::vector<PeerInfo>& pi)
+{
+	std::vector<ID> ret;
+	for(auto&& i : pi)
+	{
+		ret.push_back(i.m_id);
+	}
+	return ret;
 }
 
 
