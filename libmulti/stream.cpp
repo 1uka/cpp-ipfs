@@ -1,4 +1,4 @@
-#include <libmulti/stream.hpp>
+#include "stream.hpp"
 
 #include <common/varint.hpp>
 #include <common/channel.hpp>
