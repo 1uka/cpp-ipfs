@@ -26,17 +26,17 @@ namespace hash {
 class Type final
 {
 public:
-	Type() = default;
-	~Type() = default;
+    Type() = default;
+    ~Type() = default;
 
-	constexpr explicit Type(unsigned short _code, unsigned short _len) : m_code(_code), m_len(_len) {};
+    constexpr explicit Type(unsigned short _code, unsigned short _len) : m_code(_code), m_len(_len) {};
 
-	constexpr unsigned short code() const { return m_code; };
-	constexpr unsigned short len() const { return m_len; };
+    constexpr unsigned short code() const { return m_code; };
+    constexpr unsigned short len() const { return m_len; };
 
 private:
-	unsigned short m_code;
-	unsigned short m_len;
+    unsigned short m_code;
+    unsigned short m_len;
 };
 
 
@@ -394,7 +394,7 @@ constexpr Type const blake2s_256(0xb260, 0x20);
 bytes sum(const bytes& input, const Type& type = sha2_256);
 inline bytes sum(const std::string& input, const Type& type = sha2_256)
 {
-	return sum(std::string(input.begin(), input.end()), type);
+    return sum(std::string(input.begin(), input.end()), type);
 }
 
 
@@ -406,21 +406,21 @@ inline bytes sum(const std::string& input, const Type& type = sha2_256)
 class Decoded final
 {
 public:
-	Decoded() = default;
-	~Decoded() = default;
+    Decoded() = default;
+    ~Decoded() = default;
 
-	explicit Decoded(const bytes&);
-	explicit Decoded(const std::string& _s) : Decoded(bytes(_s.begin(), _s.end())) {};
+    explicit Decoded(const bytes&);
+    explicit Decoded(const std::string& _s) : Decoded(bytes(_s.begin(), _s.end())) {};
 
-	constexpr const bytes& hash() const { return m_hash; };
-	constexpr const Type& type() const { return m_type; };
-	
-	constexpr const unsigned short code() const { return m_type.code(); };
-	constexpr const unsigned short len() const { return m_type.len(); };
+    constexpr const bytes& hash() const { return m_hash; };
+    constexpr const Type& type() const { return m_type; };
+    
+    constexpr const unsigned short code() const { return m_type.code(); };
+    constexpr const unsigned short len() const { return m_type.len(); };
 
 private:
-	bytes m_hash;
-	Type m_type;
+    bytes m_hash;
+    Type m_type;
 };
 
 

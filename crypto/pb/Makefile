@@ -6,10 +6,10 @@ CFLAGS=-std=c++17 -g -I.
 all: $(CPP)
 
 %.pb.cc: %.proto
-	protoc --cpp_out=. $<
+    protoc --cpp_out=. $<
 
 clean:
-	rm *.pb.cc
+    rm *.pb.cc
 
 build:
-	clang++ -c -o ../../obj/crypto.pb.o crypto.pb.cc $(CFLAGS)
+    clang++ -c -o ../../obj/crypto.pb.o crypto.pb.cc $(CFLAGS)
