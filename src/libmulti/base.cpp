@@ -6,7 +6,7 @@
  * @date 2018-05-15
  */
 
-#include "base.hpp"
+#include <libmulti/base.hpp>
 
 namespace multi {
 namespace base {

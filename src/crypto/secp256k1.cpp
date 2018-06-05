@@ -1,21 +1,21 @@
-#include "ed25519.hpp"
+#include <crypto/secp256k1.hpp>
 
 
 namespace crypto {
 
 
-Ed25519PrivateKey::Ed25519PrivateKey()
+Secp256k1PrivateKey::Secp256k1PrivateKey()
 {
     CryptoPP::AutoSeededRandomPool rng;
-    m_sk.Initialize(rng, ED25519_CURVE);
+    m_sk.Initialize(rng, SECP256K1_CURVE);
 }
 
-bytes Ed25519PrivateKey::raw() const
+bytes Secp256k1PrivateKey::raw() const
 {
-    bytes ms = marshal_ed25519_privkey(this);
+    bytes ms = marshal_secp256k1_privkey(this);
 
     pb::PrivateKey pbmes;
-    pbmes.set_type(pb::KeyType::Ed25519);
+    pbmes.set_type(pb::KeyType::Secp256k1);
     pbmes.set_data(&ms[0], ms.size());
     std::string ser;
     if(!pbmes.SerializeToString(&ser))
@@ -26,7 +26,8 @@ bytes Ed25519PrivateKey::raw() const
     return bytes(ser.begin(), ser.end());
 }
 
-bytes Ed25519PrivateKey::sign(const std::string& m) const
+
+bytes Secp256k1PrivateKey::sign(const std::string& m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
     _ecdsa::Signer signer(this->m_sk);
@@ -43,7 +44,7 @@ bytes Ed25519PrivateKey::sign(const std::string& m) const
     return bytes(signature.begin(), signature.end());
 }
 
-bytes Ed25519PrivateKey::decrypt(const bytes& m) const
+bytes Secp256k1PrivateKey::decrypt(const bytes& m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
 
@@ -66,12 +67,12 @@ bytes Ed25519PrivateKey::decrypt(const bytes& m) const
     return bytes(pt.begin(), pt.end());
 }
 
-bytes Ed25519PublicKey::raw() const
+bytes Secp256k1PublicKey::raw() const
 {
-    bytes ms = marshal_ed25519_pubkey(this);
+    bytes ms = marshal_secp256k1_pubkey(this);
 
-    pb::PrivateKey pbmes;
-    pbmes.set_type(pb::KeyType::Ed25519);
+    pb::PublicKey pbmes;
+    pbmes.set_type(pb::KeyType::Secp256k1);
     pbmes.set_data(&ms[0], ms.size());
     std::string ser;
     if(!pbmes.SerializeToString(&ser))
@@ -82,7 +83,7 @@ bytes Ed25519PublicKey::raw() const
     return bytes(ser.begin(), ser.end());
 }
 
-bool Ed25519PublicKey::verify(const std::string& m, const std::string& s) const
+bool Secp256k1PublicKey::verify(const std::string& m, const std::string& s) const
 {
     _ecdsa::Verifier verifier(this->m_pk);
     return verifier.VerifyMessage(
@@ -93,7 +94,7 @@ bool Ed25519PublicKey::verify(const std::string& m, const std::string& s) const
     );
 }
 
-bytes Ed25519PublicKey::encrypt(const bytes& m) const
+bytes Secp256k1PublicKey::encrypt(const bytes& m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
     _ecies::Encryptor encryptor(this->m_pk);
@@ -110,15 +111,15 @@ bytes Ed25519PublicKey::encrypt(const bytes& m) const
     return bytes(ct.begin(), ct.end());
 }
 
-PrivKey* unmarshal_ed25519_privkey(const bytes& buf)
+PrivKey* unmarshal_secp256k1_privkey(const bytes& buf)
 {
     CryptoPP::ArraySource src(&buf[0], buf.size(), true);
     _ecies::PrivateKey pk;
     pk.BERDecode(src);
-    return new Ed25519PrivateKey(pk);
+    return new Secp256k1PrivateKey(pk);
 }
 
-bytes marshal_ed25519_privkey(const Ed25519PrivateKey* k)
+bytes marshal_secp256k1_privkey(const Secp256k1PrivateKey* k)
 {
     bytes buf(8192);
     CryptoPP::ArraySink as(&buf[0], buf.size());
@@ -126,15 +127,15 @@ bytes marshal_ed25519_privkey(const Ed25519PrivateKey* k)
     return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 
-PubKey* unmarshal_ed25519_pubkey(const bytes& buf)
+PubKey* unmarshal_secp256k1_pubkey(const bytes& buf)
 {
     CryptoPP::ArraySource src(&buf[0], buf.size(), true);
-    _ecies::PrivateKey pk;
+    _ecies::PublicKey pk;
     pk.BERDecode(src);
-    return new Ed25519PublicKey(pk);
+    return new Secp256k1PublicKey(pk);
 }
 
-bytes marshal_ed25519_pubkey(const Ed25519PublicKey* k)
+bytes marshal_secp256k1_pubkey(const Secp256k1PublicKey* k)
 {
     bytes buf(8192);
     CryptoPP::ArraySink as(&buf[0], buf.size());

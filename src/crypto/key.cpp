@@ -1,5 +1,5 @@
-#include "key.hpp"
-#include "common.hpp"
+#include <crypto/key.hpp>
+#include <crypto/common.hpp>
 
 
 namespace crypto {

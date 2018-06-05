@@ -1,26 +1,22 @@
 CC=clang++
 
-CFLAGS=-std=c++17 -g -I.
-DEPS=-lcryptopp -lboost_system -lboost_fiber-mt -lprotobuf
+CFLAGS=-std=c++17 -g -Iinclude/
+LIBS=-lcryptopp -lboost_system -lboost_fiber-mt -lprotobuf
 IOSFLAGS=-isysroot $(shell xcrun --sdk iphoneos --show-sdk-path) -arch arm64 -I/usr/local/Cellar/boost/1.67.0_1/include -I/usr/local/Cellar/cryptopp/7.0.0/include
 
-ODIR = obj
-_OBJ = varint.o hash.o base.o addr.o stream.o key.o rsa.o secp256k1.o ed25519.o crypto.pb.o peer.o peerstore.o
-OBJ = $(patsubst %, $(ODIR)/%, $(_OBJ))
+SOURCES = $(shell find src -type f -name '*.cpp' -exec cut -d' ' -f2- {} \;)
+OBJECTS = $(SOURCES:.cpp=.o)
+EXEC = ipfs
 
-$(ODIR)/%.o: libmulti/%.cpp
-	$(CC) -c -o $@ $< $(CFLAGS)
+OBJ = $(patsubst %, $(ODIR)/%, $(OBJECTS))
 
-$(ODIR)/%.o: common/%.cpp
-	$(CC) -c -o $@ $< $(CFLAGS)
+all: build
 
-$(ODIR)/%.o: crypto/%.cpp
-	$(CC) -c -o $@ $< $(CFLAGS)
+%.o: $(SOURCES)
+	$(CC) $(CFLAGS) $(LIBS) -c -o $@ $<
 
-$(ODIR)/%.o: libp2p/%.cpp
-	$(CC) -c -o $@ $< $(CFLAGS)
+build: $(OBJECTS)
+	$(CC) $(CFLAGS) $(LIBS) -o $(EXEC) $(OBJECTS)
 
-
-main: $(OBJ)
-	$(CC) -o $@ main.cpp $^ $(CFLAGS) $(DEPS)
-	# $(CC) -shared -o libipfs.so main.cpp $^ $(CFLAGS) $(DEPS)
+clean:
+	rm -rf $(EXEC) $(OBJECTS)

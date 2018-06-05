@@ -6,7 +6,7 @@
  * @date 2018-05-15
  */
 
-#include "hash.hpp"
+#include <libmulti/hash.hpp>
 
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
