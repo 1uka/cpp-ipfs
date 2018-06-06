@@ -2,7 +2,7 @@
 
 
 #include <libmulti/hash.hpp>
-#include <crypto/common.hpp>
+#include <libcrypto/common.hpp>
 
 
 namespace libp2p {

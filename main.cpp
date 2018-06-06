@@ -4,7 +4,7 @@
 #include <libmulti/addr.hpp>
 #include <libmulti/stream.hpp>
 
-#include <crypto/common.hpp>
+#include <libcrypto/common.hpp>
 
 #include <libp2p/peerstore.hpp>
 
