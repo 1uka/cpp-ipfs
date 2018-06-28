@@ -76,7 +76,7 @@ bytes ipfss2b(const std::string& s)
 std::string ipfsb2s(const bytes& b)
 {
     int len;
-    int size;
+    size_t size;
     size = uvarint(b, &len);
     bytes hash(b.begin() + len, b.end());
     if(hash.size() != size) { throw Exception("inconsistent lengths"); }
@@ -175,8 +175,8 @@ std::string bytes2string(bytes b)
         s += "/" + p.m_name;
         if(p.m_size == 0) continue;
 
-        int size = size_for_addr(p, b);
-        if(b.size() < size || size < 0)
+        uint64_t size = size_for_addr(p, b);
+        if(b.size() < size)
         {
             throw Exception("invalid value for size");
         }
@@ -202,7 +202,7 @@ std::string bytes2string(bytes b)
     return s;
 }
 
-int size_for_addr(const protocol& p, const bytes& b)
+uint64_t size_for_addr(const protocol& p, const bytes& b)
 {
     if(p.m_size > 0) {
         return p.m_size / 8;
@@ -210,7 +210,7 @@ int size_for_addr(const protocol& p, const bytes& b)
         return 0;
     } else {
         int n;
-        int x = uvarint(b, &n);
+        uint64_t x = uvarint(b, &n);
         if(n <= 0) return 0;
         return x + n;
     }
@@ -222,7 +222,8 @@ std::vector<bytes> bytes_split(bytes b)
     std::vector<bytes> ret;
     while(b.size() > 0)
     {
-        int code, len, size;
+        int code, len;
+        size_t size;
         code = varint(b, &len);
         protocol p = proto_with_code(code);
         if(p.m_code == 0)
@@ -232,7 +233,7 @@ std::vector<bytes> bytes_split(bytes b)
 
         size = size_for_addr(p, b);
         len += size;
-        if(b.size() <= len)
+        if(b.size() <= (size_t) len)
         {
             ret.push_back(bytes(b.begin(), b.end()));
             return ret;

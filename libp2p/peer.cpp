@@ -57,7 +57,7 @@ void PeerSet::add(const ID& id)
 bool PeerSet::try_add(const ID& id)
 {
     set_lock.lock();
-    if(m_set.size() >= m_cap && m_set.count(id))
+    if(m_set.size() >= (size_t) m_cap && m_set.count(id))
     {
         return false;
     }

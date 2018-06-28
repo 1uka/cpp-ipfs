@@ -105,7 +105,7 @@ static const std::array<protocol, 12> protocols = {
     protocol(P_HTTPS, 0, "https", false)
 };
 
-int size_for_addr(const protocol&, const bytes&);
+uint64_t size_for_addr(const protocol&, const bytes&);
 protocol proto_with_name(const std::string&);
 protocol proto_with_code(const int&);
 

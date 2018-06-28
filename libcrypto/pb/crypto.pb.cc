@@ -7,7 +7,6 @@
 
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/stubs/port.h>
-#include <google/protobuf/stubs/once.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/wire_format_lite_inl.h>
 #include <google/protobuf/descriptor.h>
@@ -19,6 +18,7 @@
 #include "third_party/protobuf/version.h"
 #endif
 // @@protoc_insertion_point(includes)
+
 namespace crypto {
 namespace pb {
 class PublicKeyDefaultTypeInternal {
@@ -34,14 +34,9 @@ class PrivateKeyDefaultTypeInternal {
 }  // namespace pb
 }  // namespace crypto
 namespace protobuf_crypto_2eproto {
-void InitDefaultsPublicKeyImpl() {
+static void InitDefaultsPublicKey() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::crypto::pb::_PublicKey_default_instance_;
     new (ptr) ::crypto::pb::PublicKey();
@@ -50,19 +45,12 @@ void InitDefaultsPublicKeyImpl() {
   ::crypto::pb::PublicKey::InitAsDefaultInstance();
 }
 
-void InitDefaultsPublicKey() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsPublicKeyImpl);
-}
+::google::protobuf::internal::SCCInfo<0> scc_info_PublicKey =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsPublicKey}, {}};
 
-void InitDefaultsPrivateKeyImpl() {
+static void InitDefaultsPrivateKey() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::crypto::pb::_PrivateKey_default_instance_;
     new (ptr) ::crypto::pb::PrivateKey();
@@ -71,9 +59,12 @@ void InitDefaultsPrivateKeyImpl() {
   ::crypto::pb::PrivateKey::InitAsDefaultInstance();
 }
 
-void InitDefaultsPrivateKey() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsPrivateKeyImpl);
+::google::protobuf::internal::SCCInfo<0> scc_info_PrivateKey =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsPrivateKey}, {}};
+
+void InitDefaults() {
+  ::google::protobuf::internal::InitSCC(&scc_info_PublicKey.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_PrivateKey.base);
 }
 
 ::google::protobuf::Metadata file_level_metadata[2];
@@ -111,15 +102,14 @@ static ::google::protobuf::Message const * const file_default_instances[] = {
 
 void protobuf_AssignDescriptors() {
   AddDescriptors();
-  ::google::protobuf::MessageFactory* factory = NULL;
   AssignDescriptors(
-      "crypto.proto", schemas, file_default_instances, TableStruct::offsets, factory,
+      "crypto.proto", schemas, file_default_instances, TableStruct::offsets,
       file_level_metadata, file_level_enum_descriptors, NULL);
 }
 
 void protobuf_AssignDescriptorsOnce() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &protobuf_AssignDescriptors);
+  static ::google::protobuf::internal::once_flag once;
+  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
 }
 
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
@@ -144,8 +134,8 @@ void AddDescriptorsImpl() {
 }
 
 void AddDescriptors() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &AddDescriptorsImpl);
+  static ::google::protobuf::internal::once_flag once;
+  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
 }
 // Force AddDescriptors() to be called at dynamic initialization time.
 struct StaticDescriptorInitializer {
@@ -183,17 +173,15 @@ const int PublicKey::kDataFieldNumber;
 
 PublicKey::PublicKey()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_crypto_2eproto::InitDefaultsPublicKey();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_crypto_2eproto::scc_info_PublicKey.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:crypto.pb.PublicKey)
 }
 PublicKey::PublicKey(const PublicKey& from)
   : ::google::protobuf::Message(),
       _internal_metadata_(NULL),
-      _has_bits_(from._has_bits_),
-      _cached_size_(0) {
+      _has_bits_(from._has_bits_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.has_data()) {
@@ -204,7 +192,6 @@ PublicKey::PublicKey(const PublicKey& from)
 }
 
 void PublicKey::SharedCtor() {
-  _cached_size_ = 0;
   data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   type_ = 0;
 }
@@ -219,9 +206,7 @@ void PublicKey::SharedDtor() {
 }
 
 void PublicKey::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* PublicKey::descriptor() {
   ::protobuf_crypto_2eproto::protobuf_AssignDescriptorsOnce();
@@ -229,17 +214,10 @@ const ::google::protobuf::Descriptor* PublicKey::descriptor() {
 }
 
 const PublicKey& PublicKey::default_instance() {
-  ::protobuf_crypto_2eproto::InitDefaultsPublicKey();
+  ::google::protobuf::internal::InitSCC(&protobuf_crypto_2eproto::scc_info_PublicKey.base);
   return *internal_default_instance();
 }
 
-PublicKey* PublicKey::New(::google::protobuf::Arena* arena) const {
-  PublicKey* n = new PublicKey;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void PublicKey::Clear() {
 // @@protoc_insertion_point(message_clear_start:crypto.pb.PublicKey)
@@ -249,8 +227,7 @@ void PublicKey::Clear() {
 
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    GOOGLE_DCHECK(!data_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-    (*data_.UnsafeRawStringPointer())->clear();
+    data_.ClearNonDefaultToEmptyNoArena();
   }
   type_ = 0;
   _has_bits_.Clear();
@@ -263,7 +240,7 @@ bool PublicKey::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:crypto.pb.PublicKey)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -416,9 +393,7 @@ size_t PublicKey::ByteSizeLong() const {
     total_size += RequiredFieldsByteSizeFallback();
   }
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -482,11 +457,11 @@ void PublicKey::Swap(PublicKey* other) {
 }
 void PublicKey::InternalSwap(PublicKey* other) {
   using std::swap;
-  data_.Swap(&other->data_);
+  data_.Swap(&other->data_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   swap(type_, other->type_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata PublicKey::GetMetadata() const {
@@ -506,17 +481,15 @@ const int PrivateKey::kDataFieldNumber;
 
 PrivateKey::PrivateKey()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_crypto_2eproto::InitDefaultsPrivateKey();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_crypto_2eproto::scc_info_PrivateKey.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:crypto.pb.PrivateKey)
 }
 PrivateKey::PrivateKey(const PrivateKey& from)
   : ::google::protobuf::Message(),
       _internal_metadata_(NULL),
-      _has_bits_(from._has_bits_),
-      _cached_size_(0) {
+      _has_bits_(from._has_bits_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.has_data()) {
@@ -527,7 +500,6 @@ PrivateKey::PrivateKey(const PrivateKey& from)
 }
 
 void PrivateKey::SharedCtor() {
-  _cached_size_ = 0;
   data_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   type_ = 0;
 }
@@ -542,9 +514,7 @@ void PrivateKey::SharedDtor() {
 }
 
 void PrivateKey::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* PrivateKey::descriptor() {
   ::protobuf_crypto_2eproto::protobuf_AssignDescriptorsOnce();
@@ -552,17 +522,10 @@ const ::google::protobuf::Descriptor* PrivateKey::descriptor() {
 }
 
 const PrivateKey& PrivateKey::default_instance() {
-  ::protobuf_crypto_2eproto::InitDefaultsPrivateKey();
+  ::google::protobuf::internal::InitSCC(&protobuf_crypto_2eproto::scc_info_PrivateKey.base);
   return *internal_default_instance();
 }
 
-PrivateKey* PrivateKey::New(::google::protobuf::Arena* arena) const {
-  PrivateKey* n = new PrivateKey;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void PrivateKey::Clear() {
 // @@protoc_insertion_point(message_clear_start:crypto.pb.PrivateKey)
@@ -572,8 +535,7 @@ void PrivateKey::Clear() {
 
   cached_has_bits = _has_bits_[0];
   if (cached_has_bits & 0x00000001u) {
-    GOOGLE_DCHECK(!data_.IsDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited()));
-    (*data_.UnsafeRawStringPointer())->clear();
+    data_.ClearNonDefaultToEmptyNoArena();
   }
   type_ = 0;
   _has_bits_.Clear();
@@ -586,7 +548,7 @@ bool PrivateKey::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:crypto.pb.PrivateKey)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -739,9 +701,7 @@ size_t PrivateKey::ByteSizeLong() const {
     total_size += RequiredFieldsByteSizeFallback();
   }
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -805,11 +765,11 @@ void PrivateKey::Swap(PrivateKey* other) {
 }
 void PrivateKey::InternalSwap(PrivateKey* other) {
   using std::swap;
-  data_.Swap(&other->data_);
+  data_.Swap(&other->data_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   swap(type_, other->type_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata PrivateKey::GetMetadata() const {
@@ -821,5 +781,15 @@ void PrivateKey::InternalSwap(PrivateKey* other) {
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace pb
 }  // namespace crypto
+namespace google {
+namespace protobuf {
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::crypto::pb::PublicKey* Arena::CreateMaybeMessage< ::crypto::pb::PublicKey >(Arena* arena) {
+  return Arena::CreateInternal< ::crypto::pb::PublicKey >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::crypto::pb::PrivateKey* Arena::CreateMaybeMessage< ::crypto::pb::PrivateKey >(Arena* arena) {
+  return Arena::CreateInternal< ::crypto::pb::PrivateKey >(arena);
+}
+}  // namespace protobuf
+}  // namespace google
 
 // @@protoc_insertion_point(global_scope)
