@@ -1,8 +1,7 @@
 #include "rsa.hpp"
 
-
-namespace crypto {
-
+namespace crypto
+{
 
 RsaPrivateKey::RsaPrivateKey(unsigned int bits)
 {
@@ -18,7 +17,7 @@ bytes RsaPrivateKey::raw() const
     pbmes.set_type(pb::KeyType::RSA);
     pbmes.set_data(&ms[0], ms.size());
     std::string ser;
-    if(!pbmes.SerializeToString(&ser))
+    if (!pbmes.SerializeToString(&ser))
     {
         return bytes();
     }
@@ -26,7 +25,7 @@ bytes RsaPrivateKey::raw() const
     return bytes(ser.begin(), ser.end());
 }
 
-bytes RsaPrivateKey::sign(const std::string& m) const
+bytes RsaPrivateKey::sign(const std::string &m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
 
@@ -35,28 +34,26 @@ bytes RsaPrivateKey::sign(const std::string& m) const
     CryptoPP::SecByteBlock signature(len);
     len = signer.SignMessage(
         rng,
-        (const CryptoPP::byte*) m.c_str(),
+        (const CryptoPP::byte *)m.c_str(),
         m.length(),
-        signature
-    );
+        signature);
 
     signature.resize(len);
     return bytes(signature.begin(), signature.end());
 }
 
-bytes RsaPrivateKey::decrypt(const bytes& m) const
+bytes RsaPrivateKey::decrypt(const bytes &m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
     CryptoPP::RSAES_PKCS1v15_Decryptor decryptor(this->m_sk);
     size_t dpl = decryptor.MaxPlaintextLength(m.size());
     CryptoPP::SecByteBlock pt(dpl);
-    
+
     CryptoPP::DecodingResult res = decryptor.Decrypt(
         rng,
-        (const CryptoPP::byte*) m.data(),
+        (const CryptoPP::byte *)m.data(),
         m.size(),
-        pt
-    );
+        pt);
 
     assert(res.isValidCoding);
     assert(res.messageLength <= decryptor.MaxPlaintextLength(m.size()));
@@ -74,7 +71,7 @@ bytes RsaPublicKey::raw() const
     pbmes.set_type(pb::KeyType::RSA);
     pbmes.set_data(&ms[0], ms.size());
     std::string ser;
-    if(!pbmes.SerializeToString(&ser))
+    if (!pbmes.SerializeToString(&ser))
     {
         return bytes();
     }
@@ -82,18 +79,17 @@ bytes RsaPublicKey::raw() const
     return bytes(ser.begin(), ser.end());
 }
 
-bool RsaPublicKey::verify(const std::string& m, const std::string& s) const
+bool RsaPublicKey::verify(const std::string &m, const std::string &s) const
 {
     CryptoPP::RSASSA_PKCS1v15_SHA_Verifier verifier(this->m_pk);
     return verifier.VerifyMessage(
-        (const CryptoPP::byte*) m.c_str(),
+        (const CryptoPP::byte *)m.c_str(),
         m.length(),
-        (const CryptoPP::byte*) s.c_str(),
-        s.length()
-    );
+        (const CryptoPP::byte *)s.c_str(),
+        s.length());
 }
 
-bytes RsaPublicKey::encrypt(const bytes& m) const
+bytes RsaPublicKey::encrypt(const bytes &m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
     CryptoPP::RSAES_PKCS1v15_Encryptor encryptor(this->m_pk);
@@ -102,15 +98,14 @@ bytes RsaPublicKey::encrypt(const bytes& m) const
 
     encryptor.Encrypt(
         rng,
-        (const CryptoPP::byte*) m.data(),
+        (const CryptoPP::byte *)m.data(),
         m.size(),
-        ct
-    );
+        ct);
 
     return bytes(ct.begin(), ct.end());
 }
 
-PrivKey* unmarshal_rsa_privkey(const bytes& buf)
+PrivKey *unmarshal_rsa_privkey(const bytes &buf)
 {
     CryptoPP::ArraySource src(&buf[0], buf.size(), true);
     CryptoPP::RSA::PrivateKey pk;
@@ -118,7 +113,7 @@ PrivKey* unmarshal_rsa_privkey(const bytes& buf)
     return new RsaPrivateKey(pk);
 }
 
-bytes marshal_rsa_privkey(const RsaPrivateKey* k)
+bytes marshal_rsa_privkey(const RsaPrivateKey *k)
 {
     bytes buf(8192);
     CryptoPP::ArraySink as(&buf[0], buf.size());
@@ -126,7 +121,7 @@ bytes marshal_rsa_privkey(const RsaPrivateKey* k)
     return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 
-PubKey* unmarshal_rsa_pubkey(const bytes& buf)
+PubKey *unmarshal_rsa_pubkey(const bytes &buf)
 {
     CryptoPP::ArraySource src(&buf[0], buf.size(), true);
     CryptoPP::RSA::PublicKey pk;
@@ -134,7 +129,7 @@ PubKey* unmarshal_rsa_pubkey(const bytes& buf)
     return new RsaPublicKey(pk);
 }
 
-bytes marshal_rsa_pubkey(const RsaPublicKey* k)
+bytes marshal_rsa_pubkey(const RsaPublicKey *k)
 {
     bytes buf(8192);
     CryptoPP::ArraySink as(&buf[0], buf.size());
@@ -142,4 +137,4 @@ bytes marshal_rsa_pubkey(const RsaPublicKey* k)
     return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 
-}
+} // namespace crypto

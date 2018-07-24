@@ -8,17 +8,18 @@
 
 #include "base.hpp"
 
-namespace multi {
-namespace base {
+namespace multi
+{
+namespace base
+{
 
-
-std::string b16_encode(const bytes& input)
+std::string b16_encode(const bytes &input)
 {
     size_t length = input.size();
     std::string output;
     output.reserve(2 * length);
 
-    for(size_t i = 0; i < length; i++)
+    for (size_t i = 0; i < length; i++)
     {
         output.push_back(b16alphabet[input[i] >> 4]);
         output.push_back(b16alphabet[input[i] & 15]);
@@ -27,20 +28,29 @@ std::string b16_encode(const bytes& input)
     return output;
 }
 
-bytes b16_decode(const std::string& input)
+bytes b16_decode(const std::string &input)
 {
     size_t length = input.size();
 
-    if(length & 1) { throw Exception("odd length string"); }
+    if (length & 1)
+    {
+        throw Exception("odd length string");
+    }
 
     bytes output(length / 2);
-    for(size_t i = 0; i < length; i += 2)
+    for (size_t i = 0; i < length; i += 2)
     {
-        const char* p = std::lower_bound(b16alphabet, b16alphabet + 16, input[i]);
-        if(*p != input[i]) { throw Exception("contains non-hex digits"); }
+        const char *p = std::lower_bound(b16alphabet, b16alphabet + 16, input[i]);
+        if (*p != input[i])
+        {
+            throw Exception("contains non-hex digits");
+        }
 
-        const char* q = std::lower_bound(b16alphabet, b16alphabet + 16, input[i + 1]);
-        if(*q != input[i + 1]) { throw Exception("contains non-hex digits"); }
+        const char *q = std::lower_bound(b16alphabet, b16alphabet + 16, input[i + 1]);
+        if (*q != input[i + 1])
+        {
+            throw Exception("contains non-hex digits");
+        }
 
         output.push_back(((p - b16alphabet) << 4) | (q - b16alphabet));
     }
@@ -48,8 +58,7 @@ bytes b16_decode(const std::string& input)
     return output;
 }
 
-
-std::string b32_encode(const bytes& input)
+std::string b32_encode(const bytes &input)
 {
     size_t length = input.size();
 
@@ -57,24 +66,27 @@ std::string b32_encode(const bytes& input)
     uint32_t value = 0;
     std::string output;
 
-    for(size_t i = 0; i < length; i++)
+    for (size_t i = 0; i < length; i++)
     {
         value = (value << 8) | input[i];
         bits += 8;
 
-        while(bits >= 5)
+        while (bits >= 5)
         {
             output += b32alphabet[(value >> (bits - 5)) & 31];
             bits -= 5;
         }
     }
 
-    if(bits > 0) { output += b32alphabet[(value << (5 - bits)) & 31]; }
+    if (bits > 0)
+    {
+        output += b32alphabet[(value << (5 - bits)) & 31];
+    }
 
     return output;
 }
 
-bytes b32_decode(const std::string& _input)
+bytes b32_decode(const std::string &_input)
 {
     std::string input(_input);
     std::replace(input.begin(), input.end(), '=', 'g');
@@ -85,12 +97,12 @@ bytes b32_decode(const std::string& _input)
     int index = 0;
 
     bytes output((lenght * 5 / 8) | 0);
-    for(size_t i = 0; i < lenght; i++)
+    for (size_t i = 0; i < lenght; i++)
     {
         value = (value << 5) | std::string(b32alphabet).find(tolower(input[i]));
         bits += 5;
 
-        if(bits >= 8)
+        if (bits >= 8)
         {
             output[index++] = (value >> (bits - 8)) & 0xff;
             bits -= 8;
@@ -100,16 +112,15 @@ bytes b32_decode(const std::string& _input)
     return output;
 }
 
-
-std::string b58btc_encode(const bytes& input)
+std::string b58btc_encode(const bytes &input)
 {
-    const unsigned char* pbegin = input.data(); 
-    const unsigned char* pend = input.data() + input.size();
+    const unsigned char *pbegin = input.data();
+    const unsigned char *pend = input.data() + input.size();
 
     // Skip & count leading zeroes.
     int zeroes = 0;
     int length = 0;
-    while (pbegin != pend && *pbegin == 0) 
+    while (pbegin != pend && *pbegin == 0)
     {
         pbegin++;
         zeroes++;
@@ -118,12 +129,12 @@ std::string b58btc_encode(const bytes& input)
     int size = (pend - pbegin) * 138 / 100 + 1; // log(256) / log(58), rounded up.
     std::vector<unsigned char> b58(size);
     // Process the bytes.
-    while (pbegin != pend) 
+    while (pbegin != pend)
     {
         int carry = *pbegin;
         int i = 0;
         // Apply "b58 = b58 * 256 + ch".
-        for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); (carry != 0 || i < length) && (it != b58.rend()); it++, i++) 
+        for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); (carry != 0 || i < length) && (it != b58.rend()); it++, i++)
         {
             carry += 256 * (*it);
             *it = carry % 58;
@@ -136,42 +147,52 @@ std::string b58btc_encode(const bytes& input)
     }
     // Skip leading zeroes in base58 result.
     std::vector<unsigned char>::iterator it = b58.begin() + (size - length);
-    while (it != b58.end() && *it == 0) { it++; }
+    while (it != b58.end() && *it == 0)
+    {
+        it++;
+    }
     // Translate the result into a string.
     std::string str;
     str.reserve(zeroes + (b58.end() - it));
     str.assign(zeroes, '1');
-    while (it != b58.end()) 
-        str += b58alphabet[*(it++)]; 
+    while (it != b58.end())
+        str += b58alphabet[*(it++)];
 
     return str;
 }
 
-bytes b58btc_decode(const std::string& input)
+bytes b58btc_decode(const std::string &input)
 {
-    const char* psz = input.c_str();
+    const char *psz = input.c_str();
     bytes vch;
     // Skip leading spaces.
-    while (*psz && isspace(*psz)) { psz++; }
+    while (*psz && isspace(*psz))
+    {
+        psz++;
+    }
     // Skip and count leading '1's.
     int zeroes = 0;
     int length = 0;
-    while (*psz == '1') {
+    while (*psz == '1')
+    {
         zeroes++;
         psz++;
     }
     // Allocate enough space in big-endian base256 representation.
-    int size = strlen(psz) * 733 /1000 + 1; // log(58) / log(256), rounded up.
+    int size = strlen(psz) * 733 / 1000 + 1; // log(58) / log(256), rounded up.
     std::vector<unsigned char> b256(size);
     // Process the characters.
-    static_assert(sizeof(mapBase58)/sizeof(mapBase58[0]) == 256, "mapBase58.size() should be 256"); // guarantee not out of range
-    while (*psz && !isspace(*psz)) 
+    static_assert(sizeof(mapBase58) / sizeof(mapBase58[0]) == 256, "mapBase58.size() should be 256"); // guarantee not out of range
+    while (*psz && !isspace(*psz))
     {
         // Decode base58 character
         int carry = mapBase58[(uint8_t)*psz];
-        if (carry == -1)  { throw Exception("invalid b58 character"); }
+        if (carry == -1)
+        {
+            throw Exception("invalid b58 character");
+        }
         int i = 0;
-        for (std::vector<unsigned char>::reverse_iterator it = b256.rbegin(); (carry != 0 || i < length) && (it != b256.rend()); ++it, ++i) 
+        for (std::vector<unsigned char>::reverse_iterator it = b256.rbegin(); (carry != 0 || i < length) && (it != b256.rend()); ++it, ++i)
         {
             carry += 58 * (*it);
             *it = carry % 256;
@@ -182,94 +203,131 @@ bytes b58btc_decode(const std::string& input)
         psz++;
     }
     // Skip trailing spaces.
-    while (isspace(*psz)) { psz++; }
-    if (*psz != 0) { throw Exception("invalid b58 character"); }
+    while (isspace(*psz))
+    {
+        psz++;
+    }
+    if (*psz != 0)
+    {
+        throw Exception("invalid b58 character");
+    }
     // Skip leading zeroes in b256.
     std::vector<unsigned char>::iterator it = b256.begin() + (size - length);
-    while (it != b256.end() && *it == 0) { it++; }
+    while (it != b256.end() && *it == 0)
+    {
+        it++;
+    }
     // Copy result into output vector.
     vch.reserve(zeroes + (b256.end() - it));
     vch.assign(zeroes, 0x00);
-    while (it != b256.end()) { vch.push_back(*(it++)); }
+    while (it != b256.end())
+    {
+        vch.push_back(*(it++));
+    }
     return vch;
 }
 
-
-std::string b64_encode(const bytes& input)
+std::string b64_encode(const bytes &input)
 {
     std::string output;
     size_t i;
     unsigned char a3[3], a4[4];
 
-    for(i = 0; i < input.size(); i++)
+    for (i = 0; i < input.size(); i++)
     {
         a3[i % 3] = input[i];
-        if((i + 1) % 3 == 0)
+        if ((i + 1) % 3 == 0)
         {
             a4[0] = (a3[0] & 0xfc) >> 2;
             a4[1] = ((a3[0] & 0x03) << 4) + ((a3[1] & 0xf0) >> 4);
             a4[2] = ((a3[1] & 0x0f) << 2) + ((a3[2] & 0xc0) >> 6);
             a4[3] = a3[2] & 0x3f;
 
-            for(size_t j = 0; j < 4; j++) { output += b64alphabet[a4[j]]; }
+            for (size_t j = 0; j < 4; j++)
+            {
+                output += b64alphabet[a4[j]];
+            }
         }
     }
 
     i = i % 3;
-    if(i)
+    if (i)
     {
-        for(size_t j = i; j < 3; j++) { a3[j] = '\0'; }
+        for (size_t j = i; j < 3; j++)
+        {
+            a3[j] = '\0';
+        }
 
         a4[0] = (a3[0] & 0xfc) >> 2;
         a4[1] = ((a3[0] & 0x03) << 4) + ((a3[1] & 0xf0) >> 4);
         a4[2] = ((a3[1] & 0x0f) << 2) + ((a3[2] & 0xc0) >> 6);
 
-        for(size_t j = 0; j < i + 1; j++) { output += b64alphabet[a4[j]]; }
+        for (size_t j = 0; j < i + 1; j++)
+        {
+            output += b64alphabet[a4[j]];
+        }
 
-        while(i++ < 3) { output += '='; }
+        while (i++ < 3)
+        {
+            output += '=';
+        }
     }
 
     return output;
 }
 
-bytes b64_decode(const std::string& input)
+bytes b64_decode(const std::string &input)
 {
-    constexpr auto is_base64 = [](const unsigned char& c) -> bool { return (isalnum(c) || (c == '+') || (c == '/')); };
+    constexpr auto is_base64 = [](const unsigned char &c) -> bool { return (isalnum(c) || (c == '+') || (c == '/')); };
     std::string alphabet(b64alphabet);
     bytes output;
     size_t length = input.length();
     size_t i, j;
     unsigned char a3[3], a4[4];
 
-    for(i = 0; i < length; i++)
+    for (i = 0; i < length; i++)
     {
-        if(!is_base64(input[i]) || (input[i] == '=')) { break; }
-        a4[i % 4] = input[i];
-        if((i + 1) % 4 == 0)
+        if (!is_base64(input[i]) || (input[i] == '='))
         {
-            for(j = 0; j < 4; j++) { a4[j] = alphabet.find(a4[j]); }
+            break;
+        }
+        a4[i % 4] = input[i];
+        if ((i + 1) % 4 == 0)
+        {
+            for (j = 0; j < 4; j++)
+            {
+                a4[j] = alphabet.find(a4[j]);
+            }
 
             a3[0] = (a4[0] << 2) + ((a4[1] & 0x30) >> 4);
             a3[1] = ((a4[1] & 0xf) << 4) + ((a4[2] & 0x3c) >> 2);
             a3[2] = ((a4[2] & 0x3) << 6) + a4[3];
 
-            for(j = 0; j < 3; j++) { output.push_back(a3[j]); }
+            for (j = 0; j < 3; j++)
+            {
+                output.push_back(a3[j]);
+            }
         }
     }
 
     i = i % 4;
-    if(i)
+    if (i)
     {
-        for(j = 0; j < i; j++) { a4[j] = alphabet.find(a4[j]); }
+        for (j = 0; j < i; j++)
+        {
+            a4[j] = alphabet.find(a4[j]);
+        }
         a3[0] = (a4[0] << 2) + ((a4[1] & 0x30) >> 4);
         a3[1] = ((a4[1] & 0xf) << 4) + ((a4[2] & 0x3c) >> 2);
 
-        for (j = 0; j < i - 1; j++) { output.push_back(a3[j]); }
+        for (j = 0; j < i - 1; j++)
+        {
+            output.push_back(a3[j]);
+        }
     }
 
     return output;
 }
 
-
-}
-}
+} // namespace base
+} // namespace multi

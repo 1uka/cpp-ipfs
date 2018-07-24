@@ -3,32 +3,33 @@
 #include <common/varint.hpp>
 #include <common/channel.hpp>
 
-
-namespace multi {
-namespace stream {
+namespace multi
+{
+namespace stream
+{
 
 std::once_flag lazy_srv::wait_flag;
 std::once_flag lazy_cli::rflag;
 std::once_flag lazy_cli::wflag;
 
-void delim_write(bytes& buf, const bytes& mes)
+void delim_write(bytes &buf, const bytes &mes)
 {
     put_uvarint(buf, mes.size() + 1);
     buf.insert(buf.end(), mes.begin(), mes.end());
     buf.push_back('\n');
 }
 
-void delim_write(std::ostream& os, const bytes& mes)
+void delim_write(std::ostream &os, const bytes &mes)
 {
     put_uvarint(os, mes.size() + 1);
-    os.write((const char*) mes.data(), mes.size());
+    os.write((const char *)mes.data(), mes.size());
     os << '\n';
 }
 
-bytes lp_read_buf(std::istream& is)
+bytes lp_read_buf(std::istream &is)
 {
     uint64_t len = uvarint(is);
-    if(len > (64 << 10))
+    if (len > (64 << 10))
     {
         throw Exception("incoming message too large");
     }
@@ -36,8 +37,8 @@ bytes lp_read_buf(std::istream& is)
     char buf[len];
     memset(buf, 0, sizeof(buf));
     is.read(buf, sizeof(buf));
-    
-    if(buf[len - 1] != '\n')
+
+    if (buf[len - 1] != '\n')
     {
         throw Exception("message did not have trailing newline");
     }
@@ -46,18 +47,19 @@ bytes lp_read_buf(std::istream& is)
     return ret;
 }
 
-std::vector<std::string> ls(std::iostream& rw)
+std::vector<std::string> ls(std::iostream &rw)
 {
     delim_write(rw, "ls");
     uint64_t n = uvarint(rw);
     std::vector<std::string> res(n);
-    while(n--)
+    while (n--)
     {
         bytes val;
         try
         {
             val = lp_read_buf(rw);
-        } catch(const Exception& e)
+        }
+        catch (const Exception &e)
         {
             throw e;
         }
@@ -67,7 +69,7 @@ std::vector<std::string> ls(std::iostream& rw)
     return res;
 }
 
-void Muxer::add_handler(const std::string& proto, match_func match, handler_func handler)
+void Muxer::add_handler(const std::string &proto, match_func match, handler_func handler)
 {
     this->handler_lock.lock();
     this->__remove_handler(proto);
@@ -75,11 +77,11 @@ void Muxer::add_handler(const std::string& proto, match_func match, handler_func
     this->handler_lock.unlock();
 }
 
-void Muxer::__remove_handler(const std::string& proto)
+void Muxer::__remove_handler(const std::string &proto)
 {
-    for(size_t i = 0; i < this->handlers.size(); i++)
+    for (size_t i = 0; i < this->handlers.size(); i++)
     {
-        if(this->handlers[i].add_name == proto)
+        if (this->handlers[i].add_name == proto)
         {
             this->handlers.erase(this->handlers.begin() + i);
             return;
@@ -87,7 +89,7 @@ void Muxer::__remove_handler(const std::string& proto)
     }
 }
 
-void Muxer::remove_handler(const std::string& proto)
+void Muxer::remove_handler(const std::string &proto)
 {
     this->handler_lock.lock();
     this->__remove_handler(proto);
@@ -98,23 +100,23 @@ std::vector<std::string> Muxer::protocols()
 {
     this->handler_lock.lock();
     std::vector<std::string> res;
-    
-    for(auto&& h : this->handlers)
+
+    for (auto &&h : this->handlers)
     {
         res.push_back(h.add_name);
     }
-    
+
     this->handler_lock.unlock();
     return res;
 }
 
-Handler* Muxer::__find_handler(const std::string& proto)
+Handler *Muxer::__find_handler(const std::string &proto)
 {
     this->handler_lock.lock();
-    
-    for(auto&& h : this->handlers)
+
+    for (auto &&h : this->handlers)
     {
-        if(h.match(proto)) 
+        if (h.match(proto))
         {
             this->handler_lock.unlock();
             return &h;
@@ -125,14 +127,14 @@ Handler* Muxer::__find_handler(const std::string& proto)
     return 0;
 }
 
-
-bytes read_next_token_bytes(std::iostream& rw)
+bytes read_next_token_bytes(std::iostream &rw)
 {
     bytes data;
     try
     {
         data = lp_read_buf(rw);
-    } catch(const Exception& e)
+    }
+    catch (const Exception &e)
     {
         throw e;
     }
@@ -140,39 +142,39 @@ bytes read_next_token_bytes(std::iostream& rw)
     return data;
 }
 
-std::string read_next_token(std::iostream& rw)
+std::string read_next_token(std::iostream &rw)
 {
     bytes tok;
     try
     {
         tok = read_next_token_bytes(rw);
-    } catch(const Exception& e)
+    }
+    catch (const Exception &e)
     {
         throw e;
     }
     return std::string(tok.begin(), tok.end());
 }
 
-
-multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
+multi::Stream *Muxer::negotiate_lazy(std::iostream &rw)
 {
     chan_t<std::string> pval;
     chan_t<int> started;
     int sink;
-    lazy_srv* lzc = new lazy_srv(rw);
+    lazy_srv *lzc = new lazy_srv(rw);
 
     do_once_async(lazy_srv::wait_flag, [&started, &pval, &rw] {
         started.close();
 
         delim_write(rw, proto_id);
-        
+
         std::string proto;
-        while(!pval.is_closed() && pval.pop(proto) != boost::fibers::channel_op_status::closed)
+        while (!pval.is_closed() && pval.pop(proto) != boost::fibers::channel_op_status::closed)
         {
             delim_write(rw, proto);
         }
-    }).detach();
-
+    })
+        .detach();
 
     started.pop(sink);
 
@@ -180,34 +182,39 @@ multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
     try
     {
         line = read_next_token(rw);
-    } catch(const Exception& e)
+    }
+    catch (const Exception &e)
     {
         pval.close();
         throw e;
     }
 
-    if(line != proto_id)
+    if (line != proto_id)
     {
         pval.close();
         throw Exception("incorrect proto version");
     }
 
-    while(true)
+    while (true)
     {
         try
         {
             line = read_next_token(rw);
-        } catch(const Exception& e)
+        }
+        catch (const Exception &e)
         {
             pval.close();
             throw e;
         }
 
-        if(line == "ls") {
+        if (line == "ls")
+        {
             pval.push("ls");
-        } else {
-            Handler* h = this->__find_handler(line);
-            if(h == nullptr)
+        }
+        else
+        {
+            Handler *h = this->__find_handler(line);
+            if (h == nullptr)
             {
                 pval.push("na");
                 continue;
@@ -220,30 +227,34 @@ multi::Stream* Muxer::negotiate_lazy(std::iostream& rw)
     }
 }
 
-handler_func Muxer::negotiate(std::iostream& rw, std::string& _p)
+handler_func Muxer::negotiate(std::iostream &rw, std::string &_p)
 {
     delim_write(rw, proto_id);
 
     std::string line = read_next_token(rw);
-    if(line != proto_id)
+    if (line != proto_id)
     {
         throw Exception("incorrect proto version");
     }
 
-    while(true)
+    while (true)
     {
         try
         {
             line = read_next_token(rw);
-        } catch(const Exception& e)
+        }
+        catch (const Exception &e)
         {
             throw e;
         }
 
-        if(line == "ls") {
-        } else {
-            Handler* h = this->__find_handler(line);
-            if(h == nullptr)
+        if (line == "ls")
+        {
+        }
+        else
+        {
+            Handler *h = this->__find_handler(line);
+            if (h == nullptr)
             {
                 delim_write(rw, "na");
                 continue;
@@ -256,14 +267,13 @@ handler_func Muxer::negotiate(std::iostream& rw, std::string& _p)
     }
 }
 
-void Muxer::ls(std::ostream& os)
+void Muxer::ls(std::ostream &os)
 {
     bytes buf;
     this->handler_lock.lock();
     put_uvarint(buf, this->handlers.size());
 
-    
-    for(auto&& h : this->handlers)
+    for (auto &&h : this->handlers)
     {
         delim_write(buf, h.add_name);
     }
@@ -276,43 +286,42 @@ void Muxer::ls(std::ostream& os)
     std::copy(
         ll.begin(),
         ll.end(),
-        std::ostream_iterator<byte>(os)
-    );
+        std::ostream_iterator<byte>(os));
 }
 
-void Muxer::handle(std::iostream& rw)
+void Muxer::handle(std::iostream &rw)
 {
     std::string p;
     handler_func h = this->negotiate(rw, p);
     return h(p, rw);
 }
 
-int lazy_srv::read(bytes& buf)
+int lazy_srv::read(bytes &buf)
 {
     char c;
     buf.clear();
-    while(this->rw.get(c))
+    while (this->rw.get(c))
     {
         buf.push_back(c);
     }
     return buf.size();
 }
 
-int lazy_srv::write(const bytes& buf)
+int lazy_srv::write(const bytes &buf)
 {
     do_once(lazy_srv::wait_flag, []() -> void { throw Exception("didn't initiate handhsake"); });
-    rw.write((const char*) buf.data(), buf.size());
+    rw.write((const char *)buf.data(), buf.size());
     return buf.size();
 }
 
-int lazy_cli::read(bytes& buf)
+int lazy_cli::read(bytes &buf)
 {
-    do_once(lazy_cli::wflag, [this]{
-        do_once_async(lazy_cli::wflag, [this]{ this->do_write_handshake(); }).detach();
+    do_once(lazy_cli::wflag, [this] {
+        do_once_async(lazy_cli::wflag, [this] { this->do_write_handshake(); }).detach();
         this->do_read_handshake();
     });
 
-    if(this->rerr != NULL)
+    if (this->rerr != NULL)
     {
         Exception e(this->rerr->what());
         delete this->rerr;
@@ -321,20 +330,20 @@ int lazy_cli::read(bytes& buf)
 
     char c;
     buf.clear();
-    while(this->rw.get(c))
+    while (this->rw.get(c))
     {
         buf.push_back(c);
     }
-    
+
     return buf.size();
 }
 
 void lazy_cli::do_read_handshake()
 {
-    for(auto&& p : this->protos)
+    for (auto &&p : this->protos)
     {
         std::string tok = read_next_token(this->rw);
-        if(p != tok)
+        if (p != tok)
         {
             this->rerr = new Exception("protocl mismatch");
             return;
@@ -342,17 +351,17 @@ void lazy_cli::do_read_handshake()
     }
 }
 
-int lazy_cli::do_write_handshake(const bytes& buf)
-{	
-    for(auto&& p : this->protos)
+int lazy_cli::do_write_handshake(const bytes &buf)
+{
+    for (auto &&p : this->protos)
     {
         delim_write(this->rw, p);
     }
 
     int n = 0;
-    if(buf.size() > 0)
+    if (buf.size() > 0)
     {
-        this->rw.write((const char*) buf.data(), buf.size());
+        this->rw.write((const char *)buf.data(), buf.size());
     }
     return n;
 }
@@ -362,47 +371,50 @@ void lazy_cli::do_write_handshake()
     this->do_write_handshake(bytes());
 }
 
-int lazy_cli::write(const bytes& buf)
+int lazy_cli::write(const bytes &buf)
 {
     int n = 0;
-    do_once_async(lazy_cli::wflag, [&]{
-        do_once_async(lazy_cli::rflag, [this]{ this->do_read_handshake(); }).detach();
+    do_once_async(lazy_cli::wflag, [&] {
+        do_once_async(lazy_cli::rflag, [this] { this->do_read_handshake(); }).detach();
         n = this->do_write_handshake(buf);
-    }).detach();
+    })
+        .detach();
 
-    this->rw.write((const char*) buf.data(), buf.size());
+    this->rw.write((const char *)buf.data(), buf.size());
     return buf.size();
 }
 
-void select_proto_or_fail(const std::string& proto, std::iostream& rw)
+void select_proto_or_fail(const std::string &proto, std::iostream &rw)
 {
     try
     {
         handshake(rw);
         try_select(proto, rw);
-    } catch(const Exception& e)
+    }
+    catch (const Exception &e)
     {
         throw e;
     }
 }
 
-std::string select_one_of(const std::vector<std::string>& protos, std::iostream& rw)
+std::string select_one_of(const std::vector<std::string> &protos, std::iostream &rw)
 {
     try
     {
         handshake(rw);
-    } catch(const Exception& e)
+    }
+    catch (const Exception &e)
     {
         throw e;
     }
 
-    
-    for(auto&& p : protos)
+    for (auto &&p : protos)
     {
         try
         {
             try_select(p, rw);
-        } catch(const Exception& e)
+        }
+        catch (const Exception &e)
         {
             throw e;
         }
@@ -411,11 +423,10 @@ std::string select_one_of(const std::vector<std::string>& protos, std::iostream&
     return "";
 }
 
-
-void handshake(std::iostream& rw)
+void handshake(std::iostream &rw)
 {
     std::string tok = read_next_token(rw);
-    if(tok != proto_id)
+    if (tok != proto_id)
     {
         throw Exception("mismatch in protocol id");
     }
@@ -423,28 +434,32 @@ void handshake(std::iostream& rw)
     delim_write(rw, proto_id);
 }
 
-void try_select(const std::string& proto, std::iostream& rw)
+void try_select(const std::string &proto, std::iostream &rw)
 {
     delim_write(rw, proto);
     std::string tok = read_next_token(rw);
 
-    if(tok == "na"){
+    if (tok == "na")
+    {
         throw Exception("proto not supported");
-    } else if(tok == proto) {
+    }
+    else if (tok == proto)
+    {
         return;
-    } else {
+    }
+    else
+    {
         throw Exception("unrecognized response");
     }
 }
 
-}
+} // namespace stream
 
-Stream* NewMSSelect(std::iostream& rw, const std::string& proto)
+Stream *NewMSSelect(std::iostream &rw, const std::string &proto)
 {
     std::vector<std::string> vec({stream::proto_id});
     vec.push_back(proto);
     return new stream::lazy_cli(rw, vec);
 }
 
-
-}
+} // namespace multi

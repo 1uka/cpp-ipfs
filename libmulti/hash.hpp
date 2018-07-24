@@ -6,16 +6,14 @@
  * @date 2018-05-15
  */
 
-
 #pragma once
-
 
 #include "base.hpp"
 
-
-namespace multi {
-namespace hash {
-
+namespace multi
+{
+namespace hash
+{
 
 /**
  * `Type` represents a wrapper class for hash type and is used instead of enum,
@@ -25,20 +23,19 @@ namespace hash {
  */
 class Type final
 {
-public:
+  public:
     Type() = default;
     ~Type() = default;
 
-    constexpr explicit Type(unsigned short _code, unsigned short _len) : m_code(_code), m_len(_len) {};
+    constexpr explicit Type(unsigned short _code, unsigned short _len) : m_code(_code), m_len(_len){};
 
     constexpr unsigned short code() const { return m_code; };
     constexpr unsigned short len() const { return m_len; };
 
-private:
+  private:
     unsigned short m_code;
     unsigned short m_len;
 };
-
 
 /**
  * the ones that are commented out are specified in the multihash table,
@@ -381,9 +378,6 @@ constexpr Type const blake2s_256(0xb260, 0x20);
 // constexpr Type const Skein1024_1016(0xb3df, 0x7f);
 // constexpr Type const Skein1024_1024(0xb3e0, 0x80);
 
-
-
-
 /**
  * @brief Apply a hash function to some data
  * 
@@ -391,12 +385,11 @@ constexpr Type const blake2s_256(0xb260, 0x20);
  * @param type 	the hash function to be applied
  * @return bytes the multihash of the input data
  */
-bytes sum(const bytes& input, const Type& type = sha2_256);
-inline bytes sum(const std::string& input, const Type& type = sha2_256)
+bytes sum(const bytes &input, const Type &type = sha2_256);
+inline bytes sum(const std::string &input, const Type &type = sha2_256)
 {
     return sum(bytes(input.begin(), input.end()), type);
 }
-
 
 /**
  * @brief Wrapper for a decoded multihash 
@@ -405,24 +398,23 @@ inline bytes sum(const std::string& input, const Type& type = sha2_256)
  */
 class Decoded final
 {
-public:
+  public:
     Decoded() = default;
     ~Decoded() = default;
 
-    explicit Decoded(const bytes&);
-    explicit Decoded(const std::string& _s) : Decoded(bytes(_s.begin(), _s.end())) {};
+    explicit Decoded(const bytes &);
+    explicit Decoded(const std::string &_s) : Decoded(bytes(_s.begin(), _s.end())){};
 
-    constexpr const bytes& hash() const { return m_hash; };
-    constexpr const Type& type() const { return m_type; };
-    
+    constexpr const bytes &hash() const { return m_hash; };
+    constexpr const Type &type() const { return m_type; };
+
     constexpr unsigned short code() const { return m_type.code(); };
     constexpr unsigned short len() const { return m_type.len(); };
 
-private:
+  private:
     bytes m_hash;
     Type m_type;
 };
 
-
-}  
-}
+} // namespace hash
+} // namespace multi

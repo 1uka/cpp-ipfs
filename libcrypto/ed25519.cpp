@@ -1,8 +1,7 @@
 #include "ed25519.hpp"
 
-
-namespace crypto {
-
+namespace crypto
+{
 
 Ed25519PrivateKey::Ed25519PrivateKey()
 {
@@ -18,7 +17,7 @@ bytes Ed25519PrivateKey::raw() const
     pbmes.set_type(pb::KeyType::Ed25519);
     pbmes.set_data(&ms[0], ms.size());
     std::string ser;
-    if(!pbmes.SerializeToString(&ser))
+    if (!pbmes.SerializeToString(&ser))
     {
         return bytes();
     }
@@ -26,7 +25,7 @@ bytes Ed25519PrivateKey::raw() const
     return bytes(ser.begin(), ser.end());
 }
 
-bytes Ed25519PrivateKey::sign(const std::string& m) const
+bytes Ed25519PrivateKey::sign(const std::string &m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
     _ecdsa::Signer signer(this->m_sk);
@@ -34,29 +33,27 @@ bytes Ed25519PrivateKey::sign(const std::string& m) const
     CryptoPP::SecByteBlock signature(len);
     len = signer.SignMessage(
         rng,
-        (const CryptoPP::byte*) m.c_str(),
+        (const CryptoPP::byte *)m.c_str(),
         m.length(),
-        signature
-    );
+        signature);
 
     signature.resize(len);
     return bytes(signature.begin(), signature.end());
 }
 
-bytes Ed25519PrivateKey::decrypt(const bytes& m) const
+bytes Ed25519PrivateKey::decrypt(const bytes &m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
 
     _ecies::Decryptor decryptor(this->m_sk);
     size_t dpl = decryptor.MaxPlaintextLength(m.size());
     CryptoPP::SecByteBlock pt(dpl);
-    
+
     CryptoPP::DecodingResult res = decryptor.Decrypt(
         rng,
-        (const CryptoPP::byte*) m.data(),
+        (const CryptoPP::byte *)m.data(),
         m.size(),
-        pt
-    );
+        pt);
 
     assert(res.isValidCoding);
     assert(res.messageLength <= decryptor.MaxPlaintextLength(m.size()));
@@ -74,7 +71,7 @@ bytes Ed25519PublicKey::raw() const
     pbmes.set_type(pb::KeyType::Ed25519);
     pbmes.set_data(&ms[0], ms.size());
     std::string ser;
-    if(!pbmes.SerializeToString(&ser))
+    if (!pbmes.SerializeToString(&ser))
     {
         return bytes();
     }
@@ -82,18 +79,17 @@ bytes Ed25519PublicKey::raw() const
     return bytes(ser.begin(), ser.end());
 }
 
-bool Ed25519PublicKey::verify(const std::string& m, const std::string& s) const
+bool Ed25519PublicKey::verify(const std::string &m, const std::string &s) const
 {
     _ecdsa::Verifier verifier(this->m_pk);
     return verifier.VerifyMessage(
-        (const CryptoPP::byte*) m.c_str(),
+        (const CryptoPP::byte *)m.c_str(),
         m.length(),
-        (const CryptoPP::byte*) s.c_str(),
-        s.length()
-    );
+        (const CryptoPP::byte *)s.c_str(),
+        s.length());
 }
 
-bytes Ed25519PublicKey::encrypt(const bytes& m) const
+bytes Ed25519PublicKey::encrypt(const bytes &m) const
 {
     CryptoPP::AutoSeededRandomPool rng;
     _ecies::Encryptor encryptor(this->m_pk);
@@ -102,15 +98,14 @@ bytes Ed25519PublicKey::encrypt(const bytes& m) const
 
     encryptor.Encrypt(
         rng,
-        (const CryptoPP::byte*) m.data(),
+        (const CryptoPP::byte *)m.data(),
         m.size(),
-        ct
-    );
+        ct);
 
     return bytes(ct.begin(), ct.end());
 }
 
-PrivKey* unmarshal_ed25519_privkey(const bytes& buf)
+PrivKey *unmarshal_ed25519_privkey(const bytes &buf)
 {
     CryptoPP::ArraySource src(&buf[0], buf.size(), true);
     _ecies::PrivateKey pk;
@@ -118,7 +113,7 @@ PrivKey* unmarshal_ed25519_privkey(const bytes& buf)
     return new Ed25519PrivateKey(pk);
 }
 
-bytes marshal_ed25519_privkey(const Ed25519PrivateKey* k)
+bytes marshal_ed25519_privkey(const Ed25519PrivateKey *k)
 {
     bytes buf(8192);
     CryptoPP::ArraySink as(&buf[0], buf.size());
@@ -126,7 +121,7 @@ bytes marshal_ed25519_privkey(const Ed25519PrivateKey* k)
     return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 
-PubKey* unmarshal_ed25519_pubkey(const bytes& buf)
+PubKey *unmarshal_ed25519_pubkey(const bytes &buf)
 {
     CryptoPP::ArraySource src(&buf[0], buf.size(), true);
     _ecies::PrivateKey pk;
@@ -134,7 +129,7 @@ PubKey* unmarshal_ed25519_pubkey(const bytes& buf)
     return new Ed25519PublicKey(pk);
 }
 
-bytes marshal_ed25519_pubkey(const Ed25519PublicKey* k)
+bytes marshal_ed25519_pubkey(const Ed25519PublicKey *k)
 {
     bytes buf(8192);
     CryptoPP::ArraySink as(&buf[0], buf.size());
@@ -142,5 +137,4 @@ bytes marshal_ed25519_pubkey(const Ed25519PublicKey* k)
     return bytes(&buf[0], &buf[0] + as.TotalPutLength());
 }
 
-
-}
+} // namespace crypto
